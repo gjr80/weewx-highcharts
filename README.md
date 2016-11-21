@@ -2,7 +2,7 @@
 
 ## Description ##
 
-The *Highcharts for weewx* extension provides a JSON data feed to support weeky and yearly observation plots using Highcharts. A sample HTML page and the JavaScript necessary to render the Highcharts plots is also included in the [*weewx-highcharts* repositry](https://github.com/gjr80/weewx-highcharts).
+The *Highcharts for weewx* extension provides a JSON data feed to support weeky and yearly observation plots using Highcharts. A sample HTML page and the JavaScript necessary to render the Highcharts plots is also included in the [*Highcharts for weewx* repositry](https://github.com/gjr80/weewx-highcharts).
 
 ## Pre-Requisites ##
 
