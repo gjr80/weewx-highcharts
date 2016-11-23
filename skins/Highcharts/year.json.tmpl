@@ -1,0 +1,120 @@
+##errorCatcher Echo
+##
+##This program is free software; you can redistribute it and/or modify it
+##under the terms of the GNU General Public License as published by the Free
+##Software Foundation; either version 2 of the License, or (at your option)
+##any later version.
+##
+##This program is distributed in the hope that it will be useful, but WITHOUT
+##ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+##FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+##more details.
+##
+##############################################################################
+##                                                                           #
+## Highcharts Data Feed for Weewx Extension                                  #
+##                                                                           #
+## Year observation plots JSON data file template                            #
+##                                                                           #
+## Version: 0.4.0                                        Date: 10 May 2016   #
+##                                                                           #
+##############################################################################
+[{
+"_version": "year.json.tmpl version 0.4.0",
+"utcoffset": $utcOffset,
+"timespan": {"start": $yearPlotStart, "stop": $yearPlotEnd}, 
+"temperatureplot": {
+"outTempminmax": $outTempMinMax_json, 
+"outTempaverage": $outTempAvg_json,
+"units": #slurp
+#if $unit.unit_type_dict.group_temperature == "degree_C"
+ "\u00B0 C"
+#else
+ "\u00B0 F"
+#end if
+}, 
+"windchillplot": {
+"appTempminmax": $appTempMinMax_json, 
+"appTempaverage": $appTempAvg_json, 
+"windchillaverage": $windchillAvg_json, 
+"heatindexaverage": $heatindexAvg_json, 
+"units": #slurp
+#if $unit.unit_type_dict.group_temperature == "degree_C"
+ "\u00B0 C"
+#else
+ "\u00B0 F"
+#end if
+}, 
+"humidityplot": {
+"outHumidityminmax": $outHumidityMinMax_json, 
+"outHumidityaverage": $outHumidityAvg_json}
+, 
+"barometerplot": {
+"barometerminmax": $barometerMinMax_json, 
+"barometeraverage": $barometerAvg_json, 
+"units": #slurp
+#if $unit.unit_type_dict.group_pressure == "hPa"
+ "hPa"
+#elif $unit.unit_type_dict.group_pressure == "inHg"
+ "inHg"
+#elif $unit.unit_type_dict.group_pressure == "mmHg"
+ "mmHg"
+#else
+ "mbar" 
+#end if
+}, 
+"windplot": {
+"windmax": $windMax_json, 
+"windaverage": $windAvg_json, 
+"windAvmax": $windSpeedMax_json, 
+"windAverage": $windSpeedAvg_json, 
+"units": #slurp
+#if $unit.unit_type_dict.group_speed == "km_per_hour"
+ "km/h"
+#elif $unit.unit_type_dict.group_speed == "mile_per_hour"
+ "mph"
+#elif $unit.unit_type_dict.group_speed == "meter_per_second"
+ "m/s"
+#else
+ "knots"
+#end if
+}, 
+"winddirplot": {"windDir": $windDir_json}, 
+"rainplot": {
+"rainsum": $rainSum_json, 
+"units": #slurp
+#if $unit.unit_type_dict.group_rain == "mm"
+ "mm"
+#elif $unit.unit_type_dict.group_rain == "inch"
+ "in"
+#else
+ "cm"
+#end if
+}, 
+"radiationplot": {
+"radiationmax": $radiationMax_json, 
+"radiationaverage": $radiationAvg_json}
+,
+"uvplot": {
+"uvmax": $uvMax_json, 
+"uvaverage": $uvAvg_json}
+,
+"windroseMonth": {#slurp
+"series": $wrmonth['windrosejson'], 
+"xAxis": {"categories": $wrmonth['xAxisCategoriesjson']}, 
+"yAxis": $wrmonth['yAxisjson'],
+"colors": $wrmonth['coloursjson'], 
+"title": {"text": $wrmonth['titlejson']}, 
+"legend": {"title": {"text": $wrmonth['legendTitlejson']}},
+"bullseye": $wrmonth['bullseyejson']
+},
+"windroseYear": {#slurp
+"series": $wryear['windrosejson'], 
+"xAxis": {"categories": $wryear['xAxisCategoriesjson']}, 
+"yAxis": $wryear['yAxisjson'],
+"colors": $wryear['coloursjson'], 
+"title": {"text": $wryear['titlejson']}, 
+"legend": {"title": {"text": $wryear['legendTitlejson']}},
+"bullseye": $wryear['bullseyejson']
+}
+}]
