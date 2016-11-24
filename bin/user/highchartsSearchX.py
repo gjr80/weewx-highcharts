@@ -90,7 +90,7 @@ class highchartsMinRanges(SearchList):
         SearchList.__init__(self, generator)
 
     def get_extension_list(self, timespan, db_lookup):
-        """Obatin y-axis minimum range values and return as a list of 
+        """Obatin y-axis minimum range values and return as a list of
            dictionaries.
 
         Parameters:
@@ -104,11 +104,11 @@ class highchartsMinRanges(SearchList):
          """
 
         t1 = time.time()
-        
+
         mr_dict = {}
         # get our MinRange config dict if it exists
         mr_config_dict = self.generator.skin_dict['Extras'].get('MinRange') if self.generator.skin_dict.has_key('Extras') else None
-        # if we have a config dict then loop through any key/value pairs 
+        # if we have a config dict then loop through any key/value pairs
         # discarding any pairs that are non numeric
         if mr_config_dict:
             for _key, _value in mr_config_dict.iteritems():
@@ -165,7 +165,7 @@ class highchartsWeek(SearchList):
          """
 
         t1 = time.time()
-        
+
         # Get UTC offset
         stop_struct = time.localtime(timespan.stop)
         utc_offset = (calendar.timegm(stop_struct) - calendar.timegm(time.gmtime(time.mktime(stop_struct))))/60
@@ -660,7 +660,7 @@ class highchartsWindRose(SearchList):
         SearchList.__init__(self, generator)
 
         # Get a dictionary of ous skin settings
-        self.windrose_dict = self.generator.skin_dict['Highcharts']['Windrose']
+        self.windrose_dict = self.generator.skin_dict['Extras']['Windrose']
         # Look for plot title, if not defined then set a default
         try:
             self.title = self.windrose_dict['title'].strip()
