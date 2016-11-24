@@ -297,6 +297,9 @@ var commonOptions = {
         tickLength: 4,
         tickPosition: 'inside',
         tickWidth: 1,
+        title: {
+            text: ''
+        }
     }
 };
 
@@ -440,9 +443,6 @@ Function to add/set various plot options specific to temperature spline plots
     };
     obj.xAxis.minRange = 900000;
     obj.xAxis.minTickInterval = 900000;
-    obj.yAxis.title = {
-        text: ''
-    };
     return obj
 };
 
@@ -489,9 +489,6 @@ Function to add/set various plot options specific to windchill spline plots
     };
     obj.xAxis.minRange = 900000;
     obj.xAxis.minTickInterval = 900000;
-    obj.yAxis.title = {
-        text: ''
-    };
     return obj
 };
 
@@ -553,9 +550,6 @@ Function to add/set various plot options specific to humidity spline plots
     obj.yAxis.min = 0;
     obj.yAxis.minorTickInterval = 5;
     obj.yAxis.tickInterval = 25;
-    obj.yAxis.title = {
-        text: '(%)'
-    };
     return obj
 };
 
@@ -611,9 +605,6 @@ spline plots
     };
     obj.xAxis.minRange = 900000;
     obj.xAxis.minTickInterval = 900000;
-    obj.yAxis.title = {
-        text: ''
-    };
     return obj
 };
 
@@ -667,9 +658,6 @@ Function to add/set various plot options specific to wind speed spline plots
     obj.xAxis.minRange = 900000;
     obj.xAxis.minTickInterval = 900000;
     obj.yAxis.min = 0;
-    obj.yAxis.title = {
-        text: ''
-    };
     return obj
 };
 
@@ -721,9 +709,6 @@ plots
     obj.yAxis.max = 360;
     obj.yAxis.min = 0;
     obj.yAxis.tickInterval = 90;
-    obj.yAxis.title = {
-        text: '(\u00B0)'
-    };
     obj.plotOptions.series = {
         marker: {
             radius: 2
@@ -779,10 +764,6 @@ Function to add/set various plot options specific to rainfall plots
     obj.xAxis.minRange = 3600000;
     obj.xAxis.minTickInterval = 900000;
     obj.yAxis.min = 0;
-    obj.yAxis.minRange = 5;
-    obj.yAxis.title = {
-        text: ''
-    };
     obj.plotOptions.column.color = '#72B2C4';
     obj.plotOptions.column.borderWidth = 0;
     obj.plotOptions.column.marker = {
@@ -854,9 +835,6 @@ plots
     obj.xAxis.minRange = 900000;
     obj.xAxis.minTickInterval = 900000;
     obj.yAxis.min = 0;
-    obj.yAxis.title = {
-        text: '(W/m\u00B2)'
-    };
     return obj
 };
 
@@ -905,9 +883,6 @@ Function to add/set various plot options specific to UV index spline plots
     obj.yAxis.min = 0;
     obj.yAxis.minorTickInterval = 1;
     obj.yAxis.tickInterval = 4;
-    obj.yAxis.title = {
-        text: 'Index'
-    };
     return obj
 };
 
@@ -1002,43 +977,54 @@ Function to add/set various plot options and then plot each week plot
         optionsTemp.series[0] = seriesData[0].temperatureplot.series.outTemp;
         optionsTemp.series[1] = seriesData[0].temperatureplot.series.dewpoint;
         optionsTemp.series[2] = seriesData[0].temperatureplot.series.appTemp;
-        optionsTemp.yAxis.title.text = seriesData[0].temperatureplot.yAxisLabel.text;
+        optionsTemp.yAxis.minRange = seriesData[0].temperatureplot.minRange;
+        optionsTemp.yAxis.title.text = "(" + seriesData[0].temperatureplot.units + ")";
         optionsTemp.tooltip.valueSuffix = seriesData[0].temperatureplot.units;
         optionsTemp.xAxis.min = seriesData[0].timespan.start;
         optionsTemp.xAxis.max = seriesData[0].timespan.stop;
         optionsWindchill.series[1] = seriesData[0].windchillplot.series.windchill;
         optionsWindchill.series[0] = seriesData[0].windchillplot.series.heatindex;
         optionsWindchill.series[2] = seriesData[0].windchillplot.series.appTemp;
-        optionsWindchill.yAxis.title.text = seriesData[0].windchillplot.yAxisLabel.text;
+        optionsWindchill.yAxis.minRange = seriesData[0].windchillplot.minRange;
+        optionsWindchill.yAxis.title.text = "(" + seriesData[0].windchillplot.units + ")";
         optionsWindchill.tooltip.valueSuffix = seriesData[0].windchillplot.units;
         optionsWindchill.xAxis.min = seriesData[0].timespan.start;
         optionsWindchill.xAxis.max = seriesData[0].timespan.stop;
         optionsHumidity.series[0] = seriesData[0].humidityplot.series.outHumidity;
         optionsHumidity.xAxis.min = seriesData[0].timespan.start;
         optionsHumidity.xAxis.max = seriesData[0].timespan.stop;
+        optionsHumidity.yAxis.title.text = "(" + seriesData[0].humidityplot.units + ")";
         optionsBarometer.series[0] = seriesData[0].barometerplot.series.barometer;
-        optionsBarometer.yAxis.title.text = seriesData[0].barometerplot.yAxisLabel.text;
+        optionsBarometer.yAxis.minRange = seriesData[0].barometerplot.minRange;
+        optionsBarometer.yAxis.title.text = "(" + seriesData[0].barometerplot.units + ")";
         optionsBarometer.tooltip.valueSuffix = seriesData[0].barometerplot.units;
         optionsBarometer.xAxis.min = seriesData[0].timespan.start;
         optionsBarometer.xAxis.max = seriesData[0].timespan.stop;
         optionsWind.series[0] = seriesData[0].windplot.series.windSpeed;
         optionsWind.series[1] = seriesData[0].windplot.series.windGust;
-        optionsWind.yAxis.title.text = seriesData[0].windplot.yAxisLabel.text;
+        optionsWind.yAxis.minRange = seriesData[0].windplot.minRange;
+        optionsWind.yAxis.title.text = "(" + seriesData[0].windplot.units + ")";
         optionsWind.tooltip.valueSuffix = seriesData[0].windplot.units;
         optionsWind.xAxis.min = seriesData[0].timespan.start;
         optionsWind.xAxis.max = seriesData[0].timespan.stop;
         optionsWindDir.series[0] = seriesData[0].winddirplot.series.windDir;
+        optionsWindDir.yAxis.title.text = "(" + seriesData[0].winddirplot.units + ")";
         optionsWindDir.xAxis.min = seriesData[0].timespan.start;
         optionsWindDir.xAxis.max = seriesData[0].timespan.stop;
         optionsRain.series[0] = seriesData[0].rainplot.series.rain;
-        optionsRain.yAxis.title.text = seriesData[0].rainplot.yAxisLabel.text;
+        optionsRain.yAxis.minRange = seriesData[0].rainplot.minRange;
+        optionsRain.yAxis.title.text = "(" + seriesData[0].rainplot.units + ")";
         optionsRain.tooltip.valueSuffix = seriesData[0].rainplot.units;
         optionsRadiation.series[0] = seriesData[0].radiationplot.series.radiation;
         optionsRadiation.series[1] = seriesData[0].radiationplot.series.insolation;
         optionsRadiation.series[1].type = 'area';
+        optionsRadiation.yAxis.minRange = seriesData[0].radiationplot.minRange;
+        optionsRadiation.yAxis.title.text = "(" + seriesData[0].radiationplot.units + ")";
         optionsRadiation.xAxis.min = seriesData[0].timespan.start;
         optionsRadiation.xAxis.max = seriesData[0].timespan.stop;
         optionsUv.series[0] = seriesData[0].uvplot.series.uv;
+        optionsUv.yAxis.minRange = seriesData[0].uvplot.minRange;
+        optionsUv.yAxis.title.text = "(" + seriesData[0].uvplot.units + ")";
         optionsUv.xAxis.min = seriesData[0].timespan.start;
         optionsUv.xAxis.max = seriesData[0].timespan.stop;
         Highcharts.setOptions({
@@ -1121,6 +1107,7 @@ Function to add/set various plot options and then plot each year plot
     $.getJSON(year_json, function(seriesData) {
         optionsTemp.series[0].data = seriesData[0].temperatureplot.outTempminmax;
         optionsTemp.series[1].data = seriesData[0].temperatureplot.outTempaverage;
+        optionsTemp.yAxis.minRange = seriesData[0].temperatureplot.minRange;
         optionsTemp.yAxis.title.text = "(" + seriesData[0].temperatureplot.units + ")";
         optionsTemp.tooltip.valueSuffix = seriesData[0].temperatureplot.units;
         optionsTemp.xAxis.min = seriesData[0].timespan.start;
@@ -1129,16 +1116,19 @@ Function to add/set various plot options and then plot each year plot
         optionsWindchill.series[1].data = seriesData[0].windchillplot.appTempaverage;
         optionsWindchill.series[2].data = seriesData[0].windchillplot.windchillaverage;
         optionsWindchill.series[3].data = seriesData[0].windchillplot.heatindexaverage;
+        optionsWindchill.yAxis.minRange = seriesData[0].windchillplot.minRange;
         optionsWindchill.yAxis.title.text = "(" + seriesData[0].windchillplot.units + ")";
         optionsWindchill.tooltip.valueSuffix = seriesData[0].windchillplot.units;
         optionsWindchill.xAxis.min = seriesData[0].timespan.start;
         optionsWindchill.xAxis.max = seriesData[0].timespan.stop;
         optionsHumidity.series[0].data = seriesData[0].humidityplot.outHumidityminmax;
         optionsHumidity.series[1].data = seriesData[0].humidityplot.outHumidityaverage;
+        optionsHumidity.yAxis.title.text = "(" + seriesData[0].humidityplot.units + ")";
         optionsHumidity.xAxis.min = seriesData[0].timespan.start;
         optionsHumidity.xAxis.max = seriesData[0].timespan.stop;
         optionsBarometer.series[0].data = seriesData[0].barometerplot.barometerminmax;
         optionsBarometer.series[1].data = seriesData[0].barometerplot.barometeraverage;
+        optionsBarometer.yAxis.minRange = seriesData[0].barometerplot.minRange;
         optionsBarometer.yAxis.title.text = "(" + seriesData[0].barometerplot.units + ")";
         optionsBarometer.tooltip.valueSuffix = seriesData[0].barometerplot.units;
         optionsBarometer.xAxis.min = seriesData[0].timespan.start;
@@ -1146,24 +1136,32 @@ Function to add/set various plot options and then plot each year plot
         optionsWind.series[0].data = seriesData[0].windplot.windmax;
         optionsWind.series[1].data = seriesData[0].windplot.windAvmax;
         optionsWind.series[2].data = seriesData[0].windplot.windaverage;
+        optionsWind.yAxis.minRange = seriesData[0].windplot.minRange;
         optionsWind.yAxis.title.text = "(" + seriesData[0].windplot.units + ")";
         optionsWind.tooltip.valueSuffix = seriesData[0].windplot.units;
         optionsWind.xAxis.min = seriesData[0].timespan.start;
         optionsWind.xAxis.max = seriesData[0].timespan.stop;
         optionsWindDir.series[0].data = seriesData[0].winddirplot.windDir;
+        optionsWindDir.yAxis.minRange = seriesData[0].winddirplot.minRange;
+        optionsWindDir.yAxis.title.text = "(" + seriesData[0].winddirplot.units + ")";
         optionsWindDir.xAxis.min = seriesData[0].timespan.start;
         optionsWindDir.xAxis.max = seriesData[0].timespan.stop;
         optionsRain.series[0].data = seriesData[0].rainplot.rainsum;
+        optionsRain.yAxis.minRange = seriesData[0].rainplot.minRange;
         optionsRain.yAxis.title.text = "(" + seriesData[0].rainplot.units + ")";
         optionsRain.tooltip.valueSuffix = seriesData[0].rainplot.units;
         optionsRain.xAxis.min = seriesData[0].timespan.start;
         optionsRain.xAxis.max = seriesData[0].timespan.stop;
         optionsRadiation.series[0].data = seriesData[0].radiationplot.radiationmax;
         optionsRadiation.series[1].data = seriesData[0].radiationplot.radiationaverage;
+        optionsRadiation.yAxis.minRange = seriesData[0].radiationplot.minRange;
+        optionsRadiation.yAxis.title.text = "(" + seriesData[0].radiationplot.units + ")";
         optionsRadiation.xAxis.min = seriesData[0].timespan.start;
         optionsRadiation.xAxis.max = seriesData[0].timespan.stop;
         optionsUv.series[0].data = seriesData[0].uvplot.uvmax;
         optionsUv.series[1].data = seriesData[0].uvplot.uvaverage;
+        optionsUv.yAxis.minRange = seriesData[0].uvplot.minRange;
+        optionsUv.yAxis.title.text = "(" + seriesData[0].uvplot.units + ")";
         optionsUv.xAxis.min = seriesData[0].timespan.start;
         optionsUv.xAxis.max = seriesData[0].timespan.stop;
         Highcharts.setOptions({

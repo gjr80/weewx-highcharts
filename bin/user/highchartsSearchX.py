@@ -29,7 +29,7 @@ import weewx
 from datetime import date
 from user.highcharts import getDaySummaryVectors
 from weewx.cheetahgenerator import SearchList
-from weewx.units import ValueTuple, getStandardUnitType
+from weewx.units import ValueTuple, getStandardUnitType, convert, _getUnitGroup
 from weeutil.weeutil import TimeSpan, genMonthSpans, startOfInterval, option_as_list, startOfDay
 
 def logmsg(level, msg):
@@ -83,6 +83,57 @@ def get_ago(dt, d_years=0, d_months=0):
     _eom = calendar.monthrange(_y + _a, _m + 1)[1]
     return date(_y + _a, _m + 1, _d if _d <= _eom else _eom)
 
+class highchartsMinRanges(SearchList):
+    """SearchList to return y-axis minimum range values for each plot."""
+
+    def __init__(self, generator):
+        SearchList.__init__(self, generator)
+
+    def get_extension_list(self, timespan, db_lookup):
+        """Obatin y-axis minimum range values and return as a list of 
+           dictionaries.
+
+        Parameters:
+          timespan: An instance of weeutil.weeutil.TimeSpan. This will
+                    hold the start and stop times of the domain of
+                    valid times.
+
+          db_lookup: This is a function that, given a data binding
+                     as its only parameter, will return a database manager
+                     object.
+         """
+
+        t1 = time.time()
+        
+        mr_dict = {}
+        # get our MinRange config dict if it exists
+        mr_config_dict = self.generator.skin_dict['Extras'].get('MinRange') if self.generator.skin_dict.has_key('Extras') else None
+        # if we have a config dict then loop through any key/value pairs 
+        # discarding any pairs that are non numeric
+        if mr_config_dict:
+            for _key, _value in mr_config_dict.iteritems():
+                _value_list = option_as_list(_value)
+                if len(_value_list) > 1:
+                    try:
+                        _group = _getUnitGroup(_key)
+                        _value_vt = ValueTuple(float(_value_list[0]), _value_list[1], _group)
+                    except ValueError, KeyError:
+                        continue
+                    else:
+                        _range = self.generator.converter.convert(_value_vt).value
+                else:
+                    try:
+                        _range = float(_value)
+                    except ValueError:
+                        continue
+                mr_dict[_key + '_min_range'] = _range
+
+        t2 = time.time()
+        logdbg2("highchartsMinRanges SLE executed in %0.3f seconds" % (t2 - t1))
+
+        # Return our data dict
+        return [mr_dict]
+
 class highchartsWeek(SearchList):
     """SearchList to generate JSON vectors for Highcharts week plots."""
 
@@ -114,7 +165,7 @@ class highchartsWeek(SearchList):
          """
 
         t1 = time.time()
-
+        
         # Get UTC offset
         stop_struct = time.localtime(timespan.stop)
         utc_offset = (calendar.timegm(stop_struct) - calendar.timegm(time.gmtime(time.mktime(stop_struct))))/60
@@ -134,7 +185,7 @@ class highchartsWeek(SearchList):
         outTemp_vt = self.generator.converter.convert(outTemp_vt)
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        tempRound = int(self.generator.skin_dict['Units']['StringFormats'].get(outTemp_vt[2], "1f")[-2])
+        tempRound = int(self.generator.skin_dict['Units']['StringFormats'].get(outTemp_vt[1], "1f")[-2])
         # Do the rounding
         outTempRound_vt =  [roundNone(x,tempRound) for x in outTemp_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -147,7 +198,7 @@ class highchartsWeek(SearchList):
         dewpoint_vt = self.generator.converter.convert(dewpoint_vt)
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        dewpointRound = int(self.generator.skin_dict['Units']['StringFormats'].get(dewpoint_vt[2], "1f")[-2])
+        dewpointRound = int(self.generator.skin_dict['Units']['StringFormats'].get(dewpoint_vt[1], "1f")[-2])
         # Do the rounding
         dewpointRound_vt =  [roundNone(x,dewpointRound) for x in dewpoint_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -160,7 +211,7 @@ class highchartsWeek(SearchList):
         appTemp_vt = self.generator.converter.convert(appTemp_vt)
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        apptempRound = int(self.generator.skin_dict['Units']['StringFormats'].get(appTemp_vt[2], "1f")[-2])
+        apptempRound = int(self.generator.skin_dict['Units']['StringFormats'].get(appTemp_vt[1], "1f")[-2])
         # Do the rounding
         appTempRound_vt =  [roundNone(x,apptempRound) for x in appTemp_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -173,7 +224,7 @@ class highchartsWeek(SearchList):
         windchill_vt = self.generator.converter.convert(windchill_vt)
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        windchillRound = int(self.generator.skin_dict['Units']['StringFormats'].get(windchill_vt[2], "1f")[-2])
+        windchillRound = int(self.generator.skin_dict['Units']['StringFormats'].get(windchill_vt[1], "1f")[-2])
         # Do the rounding
         windchillRound_vt =  [roundNone(x,windchillRound) for x in windchill_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -186,7 +237,7 @@ class highchartsWeek(SearchList):
         heatindex_vt = self.generator.converter.convert(heatindex_vt)
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        heatindexRound = int(self.generator.skin_dict['Units']['StringFormats'].get(heatindex_vt[2], "1f")[-2])
+        heatindexRound = int(self.generator.skin_dict['Units']['StringFormats'].get(heatindex_vt[1], "1f")[-2])
         # Do the rounding
         heatindexRound_vt =  [roundNone(x,heatindexRound) for x in heatindex_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -198,7 +249,7 @@ class highchartsWeek(SearchList):
                                                                                   'outHumidity')
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        outHumidityRound = int(self.generator.skin_dict['Units']['StringFormats'].get(outHumidity_vt[2], "1f")[-2])
+        outHumidityRound = int(self.generator.skin_dict['Units']['StringFormats'].get(outHumidity_vt[1], "1f")[-2])
         # Do the rounding
         outHumidityRound_vt =  [roundNone(x,outHumidityRound) for x in outHumidity_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -211,7 +262,7 @@ class highchartsWeek(SearchList):
         barometer_vt = self.generator.converter.convert(barometer_vt)
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        barometerRound = int(self.generator.skin_dict['Units']['StringFormats'].get(barometer_vt[2], "1f")[-2])
+        barometerRound = int(self.generator.skin_dict['Units']['StringFormats'].get(barometer_vt[1], "1f")[-2])
         # Do the rounding
         barometerRound_vt =  [roundNone(x,barometerRound) for x in barometer_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -224,7 +275,7 @@ class highchartsWeek(SearchList):
         windSpeed_vt = self.generator.converter.convert(windSpeed_vt)
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        windspeedRound = int(self.generator.skin_dict['Units']['StringFormats'].get(windSpeed_vt[2], "1f")[-2])
+        windspeedRound = int(self.generator.skin_dict['Units']['StringFormats'].get(windSpeed_vt[1], "1f")[-2])
         # Do the rounding
         windSpeedRound_vt =  [roundNone(x,windspeedRound) for x in windSpeed_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -237,7 +288,7 @@ class highchartsWeek(SearchList):
         windGust_vt = self.generator.converter.convert(windGust_vt)
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        windgustRound = int(self.generator.skin_dict['Units']['StringFormats'].get(windGust_vt[2], "1f")[-2])
+        windgustRound = int(self.generator.skin_dict['Units']['StringFormats'].get(windGust_vt[1], "1f")[-2])
         # Do the rounding
         windGustRound_vt =  [roundNone(x,windgustRound) for x in windGust_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -249,7 +300,7 @@ class highchartsWeek(SearchList):
                                                                               'windDir')
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        windDirRound = int(self.generator.skin_dict['Units']['StringFormats'].get(windDir_vt[2], "1f")[-2])
+        windDirRound = int(self.generator.skin_dict['Units']['StringFormats'].get(windDir_vt[1], "1f")[-2])
         # Do the rounding
         windDirRound_vt =  [roundNone(x,windDirRound) for x in windDir_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -270,7 +321,7 @@ class highchartsWeek(SearchList):
         rain_vt = self.generator.converter.convert(rain_vt)
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        rainRound = int(self.generator.skin_dict['Units']['StringFormats'].get(rain_vt[2], "1f")[-2])
+        rainRound = int(self.generator.skin_dict['Units']['StringFormats'].get(rain_vt[1], "1f")[-2])
         # Do the rounding
         rainRound_vt =  [roundNone(x,rainRound) for x in rain_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -282,7 +333,7 @@ class highchartsWeek(SearchList):
                                                                                 'radiation')
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        radiationRound = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_vt[2], "1f")[-2])
+        radiationRound = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_vt[1], "1f")[-2])
         # Do the rounding
         radiationRound_vt =  [roundNone(x,radiationRound) for x in radiation_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -296,7 +347,7 @@ class highchartsWeek(SearchList):
                                                                                                      'maxSolarRad')
             # Can't use ValueHelper so round our results manually
             # Get the number of decimal points
-            insolationRound = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_vt[2], "1f")[-2])
+            insolationRound = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_vt[1], "1f")[-2])
             # Do the rounding
             insolationRound_vt =  [roundNone(x,insolationRound) for x in insolation_vt[0]]
             # Get our time vector in ms (Highcharts requirement)
@@ -309,7 +360,7 @@ class highchartsWeek(SearchList):
         (time_start_vt, time_stop_vt, uv_vt) = db_lookup().getSqlVectors(TimeSpan(_start_ts, timespan.stop), 'UV')
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        uvRound = int(self.generator.skin_dict['Units']['StringFormats'].get(uv_vt[2], "1f")[-2])
+        uvRound = int(self.generator.skin_dict['Units']['StringFormats'].get(uv_vt[1], "1f")[-2])
         # Do the rounding
         uvRound_vt =  [roundNone(x,uvRound) for x in uv_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
@@ -493,15 +544,15 @@ class highchartsYear(SearchList):
                                                      ['min', 'max', 'avg'])
 
         # Get no of decimal places to use when formatting results
-        tempPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(outTempMin_vt[2], "1f")[-2])
-        outHumidityPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(outHumidity_dict['min'][2], "1f")[-2])
-        barometerPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(barometerMin_vt[2], "1f")[-2])
-        windPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(windMax_vt[2], "1f")[-2])
-        windSpeedPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(windSpeedMax_vt[2], "1f")[-2])
-        windDirPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(windDir_dict['vecdir'][2], "1f")[-2])
-        rainPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(rainSum_vt[2], "1f")[-2])
-        radiationPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_dict['max'][2], "1f")[-2])
-        uvPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(uv_dict['max'][2], "1f")[-2])
+        tempPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(outTempMin_vt[1], "1f")[-2])
+        outHumidityPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(outHumidity_dict['min'][1], "1f")[-2])
+        barometerPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(barometerMin_vt[1], "1f")[-2])
+        windPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(windMax_vt[1], "1f")[-2])
+        windSpeedPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(windSpeedMax_vt[1], "1f")[-2])
+        windDirPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(windDir_dict['vecdir'][1], "1f")[-2])
+        rainPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(rainSum_vt[1], "1f")[-2])
+        radiationPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_dict['max'][1], "1f")[-2])
+        uvPlaces = int(self.generator.skin_dict['Units']['StringFormats'].get(uv_dict['max'][1], "1f")[-2])
 
         # Get our time vector in ms
         time_ms =  [float(x) * 1000 for x in outTemp_time_vt[0]]

@@ -12,93 +12,108 @@
 ##
 ##############################################################################
 ##                                                                           #
-## Highcharts Data Feed for Weewx Extension                                  #
+## Highcharts for weewx Extension                                            #
 ##                                                                           #
 ## Year observation plots JSON data file template                            #
 ##                                                                           #
-## Version: 0.4.0                                        Date: 10 May 2016   #
+## Version: 0.1.0                                     Date: 22 November 2016 #
 ##                                                                           #
 ##############################################################################
 [{
-"_version": "year.json.tmpl version 0.4.0",
-"utcoffset": $utcOffset,
+"_version": "year.json.tmpl version 0.1.0", 
+"utcoffset": $utcOffset, 
 "timespan": {"start": $yearPlotStart, "stop": $yearPlotEnd}, 
 "temperatureplot": {
 "outTempminmax": $outTempMinMax_json, 
-"outTempaverage": $outTempAvg_json,
-"units": #slurp
-#if $unit.unit_type_dict.group_temperature == "degree_C"
- "\u00B0 C"
+"outTempaverage": $outTempAvg_json, 
+"units": "$unit.label.outTemp"#slurp
+#if $varExists('$outTemp_min_range')
+, 
+"minRange": $outTemp_min_range},
 #else
- "\u00B0 F"
-#end if
 }, 
+#end if
 "windchillplot": {
 "appTempminmax": $appTempMinMax_json, 
 "appTempaverage": $appTempAvg_json, 
 "windchillaverage": $windchillAvg_json, 
 "heatindexaverage": $heatindexAvg_json, 
-"units": #slurp
-#if $unit.unit_type_dict.group_temperature == "degree_C"
- "\u00B0 C"
+"units": "$unit.label.outTemp"#slurp
+#if $varExists('$outTemp_min_range')
+, 
+"minRange": $outTemp_min_range},
 #else
- "\u00B0 F"
-#end if
 }, 
+#end if
 "humidityplot": {
 "outHumidityminmax": $outHumidityMinMax_json, 
-"outHumidityaverage": $outHumidityAvg_json}
+"outHumidityaverage": $outHumidityAvg_json, 
+"units": "$unit.label.outHumidity"#slurp
+#if $varExists('$outHumidity_min_range')
 , 
+"minRange": $outHumidity_min_range},
+#else
+}, 
+#end if
 "barometerplot": {
 "barometerminmax": $barometerMinMax_json, 
 "barometeraverage": $barometerAvg_json, 
-"units": #slurp
-#if $unit.unit_type_dict.group_pressure == "hPa"
- "hPa"
-#elif $unit.unit_type_dict.group_pressure == "inHg"
- "inHg"
-#elif $unit.unit_type_dict.group_pressure == "mmHg"
- "mmHg"
+"units": "$unit.label.barometer"#slurp
+#if $varExists('$barometer_min_range')
+, 
+"minRange": $barometer_min_range},
 #else
- "mbar" 
-#end if
 }, 
+#end if
 "windplot": {
 "windmax": $windMax_json, 
 "windaverage": $windAvg_json, 
 "windAvmax": $windSpeedMax_json, 
 "windAverage": $windSpeedAvg_json, 
-"units": #slurp
-#if $unit.unit_type_dict.group_speed == "km_per_hour"
- "km/h"
-#elif $unit.unit_type_dict.group_speed == "mile_per_hour"
- "mph"
-#elif $unit.unit_type_dict.group_speed == "meter_per_second"
- "m/s"
+"units": "$unit.label.windSpeed"#slurp
+#if $varExists('$windSpeed_min_range')
+, 
+"minRange": $windSpeed_min_range},
 #else
- "knots"
-#end if
 }, 
-"winddirplot": {"windDir": $windDir_json}, 
+#end if
+"winddirplot": {"windDir": $windDir_json, 
+"units": "$unit.label.windDir"#slurp
+#if $varExists('$windDir_min_range')
+, 
+"minRange": $windDir_min_range},
+#else
+}, 
+#end if
 "rainplot": {
 "rainsum": $rainSum_json, 
-"units": #slurp
-#if $unit.unit_type_dict.group_rain == "mm"
- "mm"
-#elif $unit.unit_type_dict.group_rain == "inch"
- "in"
+"units": "$unit.label.rain"#slurp
+#if $varExists('$rain_min_range')
+, 
+"minRange": $rain_min_range},
 #else
- "cm"
-#end if
 }, 
+#end if
 "radiationplot": {
 "radiationmax": $radiationMax_json, 
-"radiationaverage": $radiationAvg_json}
-,
+"radiationaverage": $radiationAvg_json, 
+"units": "$unit.label.radiation"#slurp
+#if $varExists('$radiation_min_range')
+, 
+"minRange": $radiation_min_range},
+#else
+}, 
+#end if
 "uvplot": {
 "uvmax": $uvMax_json, 
-"uvaverage": $uvAvg_json}
-,
+"uvaverage": $uvAvg_json, 
+"units": "$unit.label.uv"#slurp
+#if $varExists('$UV_min_range')
+, 
+"minRange": $UV_min_range},
+#else
+}, 
+#end if
 "windroseMonth": {#slurp
 "series": $wrmonth['windrosejson'], 
 "xAxis": {"categories": $wrmonth['xAxisCategoriesjson']}, 

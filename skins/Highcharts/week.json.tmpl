@@ -12,135 +12,114 @@
 ##
 ##############################################################################
 ##                                                                           #
-## Highcharts Data Feed for Weewx Extension                                  #
+## Highcharts for weewx Extension                                            #
 ##                                                                           #
 ## Week observation plots JSON data file template                            #
 ##                                                                           #
-## Version: 0.4.0                                        Date: 10 May 2016   #
+## Version: 0.1.0                                     Date: 22 November 2016 #
 ##                                                                           #
 ##############################################################################
 [{
-"_version": "week.json.tmpl version 0.4.0",
+"_version": "week.json.tmpl version 0.1.0",
 "utcoffset": $utcOffset,
 "timespan": {"start": $weekPlotStart, "stop": $weekPlotEnd},
+##
 "temperatureplot": {"series":
 {"outTemp": {"name": "Temperature", "data": $outTempWeekjson},
 "dewpoint": {"name": "Dew Point", "data": $dewpointWeekjson},
 "appTemp": {"name": "Apparent Temperature", "data": $appTempWeekjson}},
-"yAxisLabel": {"text": #slurp
-#if $unit.unit_type_dict.group_temperature == "degree_C"
- "(\u00B0 C)"
+"units": "$unit.label.outTemp"#slurp
+#if $varExists('$outTemp_min_range')
+, 
+"minRange": $outTemp_min_range},
 #else
- "(\u00B0 F)"
-#end if
 },
-"units": #slurp
-#if $unit.unit_type_dict.group_temperature == "degree_C"
- "\u00B0 C"
-#else
- "\u00B0 F"
 #end if
-},
+##
 "windchillplot": {"series":
 {"appTemp": {"name": "Apparent Temperature", "data": $appTempWeekjson},
 "windchill": {"name": "Wind Chill", "data": $windchillWeekjson},
 "heatindex": {"name": "Heat Index", "data": $heatindexWeekjson}},
-"yAxisLabel": {"text": #slurp
-#if $unit.unit_type_dict.group_temperature == "degree_C"
- "(\u00B0 C)"
+"units": "$unit.label.windchill"#slurp
+#if $varExists('$outTemp_min_range')
+, 
+"minRange": $outTemp_min_range},
 #else
- "(\u00B0 F)"
-#end if
 },
-"units": #slurp
-#if $unit.unit_type_dict.group_temperature == "degree_C"
- "\u00B0 C"
-#else
- "\u00B0 F"
 #end if
-},
+##
 "humidityplot": {"series":
-{"outHumidity": {"name": "Humidity", "data": $outHumidityWeekjson}}
+{"outHumidity": {"name": "Humidity", "data": $outHumidityWeekjson}},
+"units": "$unit.label.outHumidity"#slurp
+#if $varExists('$outHumidity_min_range')
+, 
+"minRange": $outHumidity_min_range},
+#else
 },
+#end if
+##
 "barometerplot": {"series":
 {"barometer": {"name": "Barometer", "data": $barometerWeekjson}},
-"yAxisLabel": {"text": #slurp
-#if $unit.unit_type_dict.group_pressure == "hPa"
- "(hPa)"
-#elif $unit.unit_type_dict.group_pressure == "inHg"
- "(inHg)"
-#elif $unit.unit_type_dict.group_pressure == "mmHg"
- "(mmHg)"
+"units": "$unit.label.barometer"#slurp
+#if $varExists('$barometer_min_range')
+, 
+"minRange": $barometer_min_range},
 #else
- "(mbar)"
-#end if
 },
-"units": #slurp
-#if $unit.unit_type_dict.group_pressure == "hPa"
- "hPa"
-#elif $unit.unit_type_dict.group_pressure == "inHg"
- "inHg"
-#elif $unit.unit_type_dict.group_pressure == "mmHg"
- "mmHg"
-#else
- "mbar"
 #end if
-},
+##
 "windplot": {"series":
 {"windSpeed": {"name": "Wind Speed", "data": $windSpeedWeekjson},
 "windGust": {"name": "Wind Gust", "data": $windGustWeekjson}},
-"yAxisLabel": {"text": #slurp
-#if $unit.unit_type_dict.group_speed == "km_per_hour"
- "(km/h)"
-#elif $unit.unit_type_dict.group_speed == "mile_per_hour"
- "(mph)"
-#elif $unit.unit_type_dict.group_speed == "meter_per_second"
- "(m/s)"
+"units": "$unit.label.windSpeed"#slurp
+#if $varExists('$windSpeed_min_range')
+, 
+"minRange": $windSpeed_min_range},
 #else
- "(knots)"
-#end if
 },
-"units": #slurp
-#if $unit.unit_type_dict.group_speed == "km_per_hour"
- "km/h"
-#elif $unit.unit_type_dict.group_speed == "mile_per_hour"
- "mph"
-#elif $unit.unit_type_dict.group_speed == "meter_per_second"
- "m/s"
-#else
- "knots"
 #end if
-},
+##
 "winddirplot": {"series":
-{"windDir": {"name": "Wind Direction", "data": $windDirWeekjson}}
+{"windDir": {"name": "Wind Direction", "data": $windDirWeekjson}},
+"units": "$unit.label.windDir"#slurp
+#if $varExists('$windDir_min_range')
+, 
+"minRange": $windDir_min_range},
+#else
 },
+#end if
+##
 "rainplot": {"series":
 {"rain": {"name": "Rainfall", "data": $rainWeekjson}},
-"yAxisLabel": {"text": #slurp
-#if $unit.unit_type_dict.group_rain == "mm"
- "(mm)"
-#elif $unit.unit_type_dict.group_rain == "inch"
- "(in)"
+"units": "$unit.label.rain"#slurp
+#if $varExists('$rain_min_range')
+, 
+"minRange": $rain_min_range},
 #else
- "(cm)"
-#end if
 },
-"units": #slurp
-#if $unit.unit_type_dict.group_rain == "mm"
- "mm"
-#elif $unit.unit_type_dict.group_rain == "inch"
- "in"
-#else
- "cm"
 #end if
-},
+##
 "radiationplot": {"series":
 {"radiation": {"name": "Solar Radiation", "data": $radiationWeekjson},
-"insolation": {"name": "Theoretical Max Solar Radiation", "data": $insolationWeekjson}}
+"insolation": {"name": "Theoretical Max Solar Radiation", "data": $insolationWeekjson}},
+"units": "$unit.label.radiation"#slurp
+#if $varExists('$radiation_min_range')
+, 
+"minRange": $radiation_min_range},
+#else
 },
+#end if
+##
 "uvplot": {"series":
-{"uv": {"name": "UV Index", "data": $uvWeekjson}}
+{"uv": {"name": "UV Index", "data": $uvWeekjson}},
+"units": "$unit.label.UV"#slurp
+#if $varExists('$UV_min_range')
+, 
+"minRange": $UV_min_range},
+#else
 },
+#end if
+##
 "windroseDay": {#slurp
 "series": $wr86400['windrosejson'],
 "xAxis": {"categories": $wr86400['xAxisCategoriesjson']},
@@ -150,6 +129,7 @@
 "legend": {"title": {"text": $wr86400['legendTitlejson']}},
 "bullseye": $wr86400['bullseyejson']
 },
+##
 "windroseWeek": {#slurp
 "series": $wr604800['windrosejson'],
 "xAxis": {"categories": $wr604800['xAxisCategoriesjson']},
