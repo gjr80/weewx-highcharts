@@ -47,7 +47,12 @@ class HfwInstaller(ExtensionInstaller):
                     'Highcharts': {
                         'skin': 'Highcharts',
                         'CheetahGenerator': {
-                            'HTML_ROOT': 'json'
+                            'HTML_ROOT': 'json',
+                            'ToDate': {
+                                'YearJSON': {
+                                    'stale_age': '3600'
+                                }
+                            }
                         },
                         'Units': {
                             'Groups': {

@@ -20,7 +20,7 @@ Note:   In the following code snippets the symbolic name *$DOWNLOAD_ROOT* is
 releases page (https://github.com/gjr80/weewx-highcharts/releases) into a 
 directory accessible from the weewx machine.
 
-    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/hfw-0.1.0.tar.gz
+    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.1.0/hfw-0.1.0.tar.gz
 
 	where $DOWNLOAD_ROOT is the path to the directory where the Highcharts for 
     weewx extension is to be downloaded.  
@@ -70,7 +70,7 @@ Manual installation
 releases page (https://github.com/gjr80/weewx-highcharts/releases) into a 
 directory accessible from the weewx machine.
 
-    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/hfw-0.1.0.tar.gz
+    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.1.0/hfw-0.1.0.tar.gz
 
 	where $DOWNLOAD_ROOT is the path to the directory where the Highcharts for 
     weewx extension is to be downloaded.  
