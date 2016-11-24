@@ -47,7 +47,6 @@ class HfwInstaller(ExtensionInstaller):
                     'Highcharts': {
                         'skin': 'Highcharts',
                         'CheetahGenerator': {
-                            'HTML_ROOT': 'json',
                             'ToDate': {
                                 'YearJSON': {
                                     'stale_age': '3600'
@@ -163,8 +162,8 @@ class HfwInstaller(ExtensionInstaller):
                                  'bin/user/highchartsSearchX.py'
                                 ]
                    ),
-                   ('skins/Highcharts', ['skins/Highcharts/week.json.tmpl',
-                                         'skins/Highcharts/year.json.tmpl',
+                   ('skins/Highcharts', ['skins/Highcharts/json/week.json.tmpl',
+                                         'skins/Highcharts/json/year.json.tmpl',
                                          'skins/Highcharts/skin.conf',
                                          'skins/Highcharts/scripts/saratogaplots.js',
                                          'skins/Highcharts/scripts/weewxtheme.js'
