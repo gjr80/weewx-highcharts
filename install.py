@@ -39,7 +39,7 @@ class HfwInstaller(ExtensionInstaller):
         super(HfwInstaller, self).__init__(
             version=HFW_VERSION,
             name='Hfw',
-            description='weewx support for plotting observationa data using Highcharts.',
+            description='weewx support for plotting observational data using Highcharts.',
             author="Gary Roderick",
             author_email="gjroderick@gmail.com",
             config={
@@ -165,8 +165,8 @@ class HfwInstaller(ExtensionInstaller):
                    ('skins/Highcharts', ['skins/Highcharts/json/week.json.tmpl',
                                          'skins/Highcharts/json/year.json.tmpl',
                                          'skins/Highcharts/skin.conf',
-                                         'skins/Highcharts/scripts/saratogaplots.js',
-                                         'skins/Highcharts/scripts/weewxtheme.js'
+                                         'skins/Highcharts/scripts/plots.js',
+                                         'skins/Highcharts/scripts/theme.js'
                                         ]
                    )
             ]
