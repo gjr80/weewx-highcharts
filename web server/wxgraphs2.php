@@ -39,9 +39,9 @@ $showGizmo = true;  // set to false to exclude the gizmo
 include("top.php");
 ############################################################################
 ?>
-    <script src="/scripts/jquery/jquery-1.11.3.min.js"></script>
-    <script src="/scripts/highcharts/highstock.js"></script>
-    <script src="/scripts/highcharts/highcharts-more.js"></script>
+    <script src="/scripts/jquery/jquery-1.11.3.min.js" type="text/javascript"></script>
+    <script src="/scripts/highcharts/highstock.js" type="text/javascript"></script>
+    <script src="/scripts/highcharts/highcharts-more.js" type="text/javascript"></script>
     <script src="/scripts/highcharts/exporting.js" type="text/javascript"></script>
     <script src="/scripts/js/theme.js" type="text/javascript"></script>
     <script src="/scripts/js/plots.js" type="text/javascript"></script>
