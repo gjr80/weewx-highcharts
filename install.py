@@ -164,9 +164,7 @@ class HfwInstaller(ExtensionInstaller):
                    ),
                    ('skins/Highcharts', ['skins/Highcharts/json/week.json.tmpl',
                                          'skins/Highcharts/json/year.json.tmpl',
-                                         'skins/Highcharts/skin.conf',
-                                         'skins/Highcharts/scripts/plots.js',
-                                         'skins/Highcharts/scripts/theme.js'
+                                         'skins/Highcharts/skin.conf'
                                         ]
                    )
             ]

@@ -39,12 +39,12 @@ $showGizmo = true;  // set to false to exclude the gizmo
 include("top.php");
 ############################################################################
 ?>
-    <script src="/scripts/jquery/jquery-1.11.3.min.js" type="text/javascript"></script>
-    <script src="/scripts/highcharts/highstock.js" type="text/javascript"></script>
-    <script src="/scripts/highcharts/highcharts-more.js" type="text/javascript"></script>
-    <script src="/scripts/highcharts/exporting.js" type="text/javascript"></script>
-    <script src="/scripts/js/theme.js" type="text/javascript"></script>
-    <script src="/scripts/js/plots.js" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/stock/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    <script src="/scripts/js/weewxtheme.js"></script>
+    <script src="/scripts/js/saratogaplots.js"></script>
     <script type="text/javascript">
         window.onload = function() {
             //Get references to links on the page
