@@ -1,6 +1,6 @@
 /*****************************************************************************
 
-v0.1.0                                          Last Update: 22 November 2016
+v0.2.0                                          Last Update: 4 May 2017
 
 Javascript to setup, configure and display Highcharts plots of weewx weather
 data.
@@ -44,6 +44,8 @@ To install/setup:
         changing the plot settings in this file and weewxtheme.js
 
 History
+    v0.2.0      4 May 2017
+        - ignores appTemp and insolation plots if no relevant data is available
     v0.1.0      22 November 2016
         - initial implementation
 
@@ -73,8 +75,8 @@ Set paths/names of our week and year JSON data files
 Paths are relative to the web server root
 
 *****************************************************************************/
-var week_json = '/weewx/json/week.json';
-var year_json = '/weewx/json/year.json';
+var week_json = '../json/week.json';
+var year_json = '../json/year.json';
 
 /*****************************************************************************
 
@@ -976,7 +978,9 @@ Function to add/set various plot options and then plot each week plot
     $.getJSON(week_json, function(seriesData) {
         optionsTemp.series[0] = seriesData[0].temperatureplot.series.outTemp;
         optionsTemp.series[1] = seriesData[0].temperatureplot.series.dewpoint;
-        optionsTemp.series[2] = seriesData[0].temperatureplot.series.appTemp;
+        if ("appTemp" in seriesData[0].temperatureplot.series) {
+            optionsTemp.series[2] = seriesData[0].temperatureplot.series.appTemp;
+        }
         optionsTemp.yAxis.minRange = seriesData[0].temperatureplot.minRange;
         optionsTemp.yAxis.title.text = "(" + seriesData[0].temperatureplot.units + ")";
         optionsTemp.tooltip.valueSuffix = seriesData[0].temperatureplot.units;
@@ -984,7 +988,9 @@ Function to add/set various plot options and then plot each week plot
         optionsTemp.xAxis.max = seriesData[0].timespan.stop;
         optionsWindchill.series[1] = seriesData[0].windchillplot.series.windchill;
         optionsWindchill.series[0] = seriesData[0].windchillplot.series.heatindex;
-        optionsWindchill.series[2] = seriesData[0].windchillplot.series.appTemp;
+        if ("appTemp" in seriesData[0].temperatureplot.series) {
+            optionsWindchill.series[2] = seriesData[0].windchillplot.series.appTemp;
+        }
         optionsWindchill.yAxis.minRange = seriesData[0].windchillplot.minRange;
         optionsWindchill.yAxis.title.text = "(" + seriesData[0].windchillplot.units + ")";
         optionsWindchill.tooltip.valueSuffix = seriesData[0].windchillplot.units;
@@ -1016,8 +1022,10 @@ Function to add/set various plot options and then plot each week plot
         optionsRain.yAxis.title.text = "(" + seriesData[0].rainplot.units + ")";
         optionsRain.tooltip.valueSuffix = seriesData[0].rainplot.units;
         optionsRadiation.series[0] = seriesData[0].radiationplot.series.radiation;
-        optionsRadiation.series[1] = seriesData[0].radiationplot.series.insolation;
-        optionsRadiation.series[1].type = 'area';
+        if ("insolation" in seriesData[0].radiationplot.series) {
+            optionsRadiation.series[1] = seriesData[0].radiationplot.series.insolation;
+            optionsRadiation.series[1].type = 'area';
+        }
         optionsRadiation.yAxis.minRange = seriesData[0].radiationplot.minRange;
         optionsRadiation.yAxis.title.text = "(" + seriesData[0].radiationplot.units + ")";
         optionsRadiation.xAxis.min = seriesData[0].timespan.start;
@@ -1112,10 +1120,21 @@ Function to add/set various plot options and then plot each year plot
         optionsTemp.tooltip.valueSuffix = seriesData[0].temperatureplot.units;
         optionsTemp.xAxis.min = seriesData[0].timespan.start;
         optionsTemp.xAxis.max = seriesData[0].timespan.stop;
-        optionsWindchill.series[0].data = seriesData[0].windchillplot.appTempminmax;
-        optionsWindchill.series[1].data = seriesData[0].windchillplot.appTempaverage;
-        optionsWindchill.series[2].data = seriesData[0].windchillplot.windchillaverage;
         optionsWindchill.series[3].data = seriesData[0].windchillplot.heatindexaverage;
+        optionsWindchill.series[2].data = seriesData[0].windchillplot.windchillaverage;
+        if ("appTempminmax" in seriesData[0].windchillplot) {
+            optionsWindchill.series[0].data = seriesData[0].windchillplot.appTempminmax;
+        } else {
+            optionsWindchill.series.shift();
+        }
+        if ("appTempaverage" in seriesData[0].windchillplot) {
+            optionsWindchill.series[1].data = seriesData[0].windchillplot.appTempaverage;
+        } else {
+            optionsWindchill.series.shift();
+        }
+        if ((!("appTempminmax" in seriesData[0].windchillplot)) && (!("appTempaverage" in seriesData[0].windchillplot))) {
+            optionsWindchill.title.text = 'Wind Chill/Heat Index';
+        }
         optionsWindchill.yAxis.minRange = seriesData[0].windchillplot.minRange;
         optionsWindchill.yAxis.title.text = "(" + seriesData[0].windchillplot.units + ")";
         optionsWindchill.tooltip.valueSuffix = seriesData[0].windchillplot.units;
