@@ -13,9 +13,11 @@
 #  observation recorded in the daily summary tables. An equivalent to
 #  getSqlVectors but for daily summaries.
 #
-#  Version: 0.1.0                                    Date: 22 November 2016
+#  Version: 0.2.0                                    Date: 4 May 2017
 #
 #  Revision History
+#   4 May 2017          v0.2.0
+#       - no change, version number chnage only
 #   22 November 2016    v0.1.0
 #       - initial implementation
 

@@ -4,16 +4,18 @@
 # Foundation; either version 2 of the License, or (at your option) any later
 # version.
 #
-# This program is distributed in the hope that it will be useful, but WITHOUT 
+# This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details.
 #
 #                     Installer for Highcharts for weewx
 #
-# Version: 0.1.0                                    Date: 22 November 2016
+# Version: 0.2.0                                    Date: 4 May 2017
 #
 # Revision History
+#  4 May 2017           v0.1.0
+#       - version number change only
 #  21 November 2016     v0.1.0
 #       - initial implementation
 #
@@ -24,7 +26,7 @@ from distutils.version import StrictVersion
 from setup import ExtensionInstaller
 
 REQUIRED_VERSION = "3.4.0"
-HFW_VERSION = "0.1.0"
+HFW_VERSION = "0.2.0"
 
 def loader():
     return HfwInstaller()
@@ -32,8 +34,8 @@ def loader():
 class HfwInstaller(ExtensionInstaller):
     def __init__(self):
         if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_VERSION):
-            msg = "%s requires weewx %s or greater, found %s" % ('Hfw ' + HFW_VERSION, 
-                                                                 REQUIRED_VERSION, 
+            msg = "%s requires weewx %s or greater, found %s" % ('Hfw ' + HFW_VERSION,
+                                                                 REQUIRED_VERSION,
                                                                  weewx.__version__)
             raise weewx.UnsupportedFeature(msg)
         super(HfwInstaller, self).__init__(

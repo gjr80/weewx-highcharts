@@ -12,10 +12,16 @@
 # Search List Extension classes to support generation of JSON data file for
 # use by Highcharts to plot weewx observations.
 #
-# Version: 0.1.0                                    Date: 22 November 2016
+# Version: 0.2.0                                    Date: 4 May 2017
 #
 # Revision History
-#  22 November 2016     v0.1.0
+#   4 May 2017          v0.2.0
+#       - Removed hard coding of weeWX-WD bindings for appTemp and Insolation
+#         data. Now attempts to otain bindings for each from weeWX-WD, if
+#         weeWX-WD is not installed bindings are sought in weewx.conf
+#         [StdReport][[Highcharts]]. If no binding can be found appTemp and
+#         insolation data is omitted.
+#   22 November 2016    v0.1.0
 #       - initial implementation
 #
 
@@ -140,16 +146,45 @@ class highchartsWeek(SearchList):
     def __init__(self, generator):
         SearchList.__init__(self, generator)
 
-        # Do we have a supplementary binding? Try to get it from [Weewx-WD] in
-        # weewx.conf, if something is missing use a reasonable default. A
-        # try..except around any later use of the binding will save us if the
-        # default binding does not exist.
+        # Do we have bindings for maxSolarRad and appTemp? weewx-WD can provide
+        # these (if installed) or the user can specify in
+        # [StdReport][[Highcharts]] or failing this we will ignore maxSolarRad
+        # and appTemp.
+
+        # maxSolarRad. First try to get the binding from weewx-WD if installed
         try:
-            self.wdsupp_binding = generator.config_dict['Weewx-WD']['Supplementary'].get('data_binding',
-                                                                                         'wdsupp_binding')
-        except:
-            # if we can find it in the config dict use a reasonable default
-            self.wdsupp_binding = 'wdsupp_binding'
+            self.insolation_binding = generator.config_dict['Weewx-WD']['Supplementary'].get('data_binding')
+        except KeyError:
+            # Likely weewx-WD is not installed so set to None
+            self.insolation_binding = None
+        if self.insolation_binding is None:
+            # Try [StdReport][[Highcharts]]
+            try:
+                self.insolation_binding = generator.config_dict['StdReport']['Highcharts'].get('insolation_binding')
+                # Just in case insolation_binding is included but not set
+                if self.insolation_binding == '':
+                    self.insolation_binding = None
+            except KeyError:
+                # Should only occur if the user chnaged the name of
+                # [[Highcharts]] in [StdReport]
+                self.insolation_binding = None
+        # appTemp. First try to get the binding from weewx-WD if installed
+        try:
+            self.apptemp_binding = generator.config_dict['Weewx-WD'].get('data_binding')
+        except KeyError:
+            # Likely weewx-WD is not installed so set to None
+            self.apptemp_binding = None
+        if self.apptemp_binding is None:
+            # Try [StdReport][[Highcharts]]
+            try:
+                self.apptemp_binding = generator.config_dict['StdReport']['Highcharts'].get('apptemp_binding')
+                # Just in case apptemp_binding is included but not set
+                if self.apptemp_binding == '':
+                    self.apptemp_binding = None
+            except KeyError:
+                # Should only occur if the user chnaged the name of
+                # [[Highcharts]] in [StdReport]
+                self.apptemp_binding = None
 
     def get_extension_list(self, timespan, db_lookup):
         """Generate the JSON vectors and return as a list of dictionaries.
@@ -205,18 +240,27 @@ class highchartsWeek(SearchList):
         # Need to do it for each getSqlVectors result as they might be different
         dewpoint_time_ms =  [float(x) * 1000 for x in time_stop_vt[0]]
 
-        # Get our apparent temperature vector
-        (time_start_vt, time_stop_vt, appTemp_vt) = db_lookup('wd_binding').getSqlVectors(TimeSpan(_start_ts, timespan.stop),
-                                                                                          'appTemp')
-        appTemp_vt = self.generator.converter.convert(appTemp_vt)
-        # Can't use ValueHelper so round our results manually
-        # Get the number of decimal points
-        apptempRound = int(self.generator.skin_dict['Units']['StringFormats'].get(appTemp_vt[1], "1f")[-2])
-        # Do the rounding
-        appTempRound_vt =  [roundNone(x,apptempRound) for x in appTemp_vt[0]]
-        # Get our time vector in ms (Highcharts requirement)
-        # Need to do it for each getSqlVectors result as they might be different
-        appTemp_time_ms =  [float(x) * 1000 for x in time_stop_vt[0]]
+        # Get our apparent temperature vector. appTemp data is not normally
+        # archived so only try to get it if we have a binding for it. Wrap in a
+        # try..except to catch any errors. If we don't have a binding then set
+        # the vector to None
+        if self.apptemp_binding is not None:
+            try:
+                (time_start_vt, time_stop_vt, appTemp_vt) = db_lookup(self.apptemp_binding).getSqlVectors(TimeSpan(_start_ts, timespan.stop),
+                                                                                                          'appTemp')
+                appTemp_vt = self.generator.converter.convert(appTemp_vt)
+                # Can't use ValueHelper so round our results manually
+                # Get the number of decimal points
+                apptempRound = int(self.generator.skin_dict['Units']['StringFormats'].get(appTemp_vt[1], "1f")[-2])
+                # Do the rounding
+                appTempRound_vt =  [roundNone(x,apptempRound) for x in appTemp_vt[0]]
+                # Get our time vector in ms (Highcharts requirement)
+                # Need to do it for each getSqlVectors result as they might be different
+                appTemp_time_ms =  [float(x) * 1000 for x in time_stop_vt[0]]
+            except weewx.UnknownBinding:
+                raise
+        else:
+            appTempRound_vt = None
 
         # Get our wind chill vector
         (time_start_vt, time_stop_vt, windchill_vt) = db_lookup().getSqlVectors(TimeSpan(_start_ts, timespan.stop),
@@ -340,21 +384,26 @@ class highchartsWeek(SearchList):
         # Need to do it for each getSqlVectors result as they might be different
         radiation_time_ms =  [float(x) * 1000 for x in time_stop_vt[0]]
 
-        # Get our insolation vector. We may not have insolation data available
-        # so wrap in a try..except to catch any errors.
-        try:
-            (time_start_vt, time_stop_vt, insolation_vt) = db_lookup(self.wdsupp_binding).getSqlVectors(TimeSpan(_start_ts, timespan.stop),
-                                                                                                     'maxSolarRad')
-            # Can't use ValueHelper so round our results manually
-            # Get the number of decimal points
-            insolationRound = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_vt[1], "1f")[-2])
-            # Do the rounding
-            insolationRound_vt =  [roundNone(x,insolationRound) for x in insolation_vt[0]]
-            # Get our time vector in ms (Highcharts requirement)
-            # Need to do it for each getSqlVectors result as they might be different
-            insolation_time_ms =  [float(x) * 1000 for x in time_stop_vt[0]]
-        except:
-            pass
+        # Get our insolation vector. Insolation data is not normally archived
+        # so only try to get it if we have a binding for it. Wrap in a
+        # try..except to catch any errors. If we don't have a binding then set
+        # the vector to None
+        if self.insolation_binding is not None:
+            try:
+                (time_start_vt, time_stop_vt, insolation_vt) = db_lookup(self.insolation_binding).getSqlVectors(TimeSpan(_start_ts, timespan.stop),
+                                                                                                                'maxSolarRad')
+                # Can't use ValueHelper so round our results manually
+                # Get the number of decimal points
+                insolationRound = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_vt[1], "1f")[-2])
+                # Do the rounding
+                insolationRound_vt =  [roundNone(x,insolationRound) for x in insolation_vt[0]]
+                # Get our time vector in ms (Highcharts requirement)
+                # Need to do it for each getSqlVectors result as they might be different
+                insolation_time_ms =  [float(x) * 1000 for x in time_stop_vt[0]]
+            except weewx.UnknownBinding:
+                raise
+        else:
+            insolationRound_vt = None
 
         # Get our UV vector
         (time_start_vt, time_stop_vt, uv_vt) = db_lookup().getSqlVectors(TimeSpan(_start_ts, timespan.stop), 'UV')
@@ -371,7 +420,12 @@ class highchartsWeek(SearchList):
         # Assumes all vectors have the same number of elements
         outTemp_json = json.dumps(zip(outTemp_time_ms, outTempRound_vt))
         dewpoint_json = json.dumps(zip(dewpoint_time_ms, dewpointRound_vt))
-        appTemp_json = json.dumps(zip(appTemp_time_ms, appTempRound_vt))
+        # convert our appTemp vector to JSON, if we don't have one then set
+        # it to None
+        if appTempRound_vt is not None:
+            appTemp_json = json.dumps(zip(appTemp_time_ms, appTempRound_vt))
+        else:
+            appTemp_json = None
         windchill_json = json.dumps(zip(windchill_time_ms, windchillRound_vt))
         heatindex_json = json.dumps(zip(heatindex_time_ms, heatindexRound_vt))
         outHumidity_json = json.dumps(zip(outHumidity_time_ms, outHumidityRound_vt))
@@ -381,11 +435,11 @@ class highchartsWeek(SearchList):
         windDir_json = json.dumps(zip(windDir_time_ms, windDirRound_vt))
         radiation_json = json.dumps(zip(radiation_time_ms, radiationRound_vt))
         # convert our insolation vector to JSON, if we don't have one then set
-        # it to empty
-        try:
+        # it to None
+        if insolationRound_vt is not None:
             insolation_json = json.dumps(zip(insolation_time_ms, insolationRound_vt))
-        except:
-            insolation_json = []
+        else:
+            insolation_json = None
         uv_json = json.dumps(zip(UV_time_ms, uvRound_vt))
         rain_json = json.dumps(zip(timeRain_ms, rainRound_vt))
 
@@ -419,6 +473,28 @@ class highchartsYear(SearchList):
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)
+
+        # Do we have a binding for appTemp? weewx-WD can provide (if installed)
+        # or the user can specify in [StdReport][[Highcharts]] or failing this
+        # we will ignore appTemp.
+
+        # First try to get the binding from weewx-WD if installed
+        try:
+            self.apptemp_binding = generator.config_dict['Weewx-WD'].get('data_binding')
+        except KeyError:
+            # Likely weewx-WD is not installed so set to None
+            self.apptemp_binding = None
+        if self.apptemp_binding is None:
+            # Try [StdReport][[Highcharts]]
+            try:
+                self.apptemp_binding = generator.config_dict['StdReport']['Highcharts'].get('apptemp_binding')
+                # Just in case apptemp_binding is included but not set
+                if self.apptemp_binding == '':
+                    self.apptemp_binding = None
+            except KeyError:
+                # Should only occur if the user chnaged the name of
+                # [[Highcharts]] in [StdReport]
+                self.apptemp_binding = None
 
     def get_extension_list(self, timespan, db_lookup):
         """Generate the JSON vectors and return as a list of dictionaries.
@@ -458,15 +534,26 @@ class highchartsYear(SearchList):
         outTempMax_vt = self.generator.converter.convert(outTemp_dict['max'])
         outTempAvg_vt = self.generator.converter.convert(outTemp_dict['avg'])
 
-        # Get our appTemp vectors
-        (appTemp_time_vt, appTemp_dict) = getDaySummaryVectors(db_lookup('wd_binding'),
-                                                               'appTemp',
-                                                               _timespan,
-                                                               ['min', 'max', 'avg'])
-        # Get our vector ValueTuple out of the dictionary and convert it
-        appTempMin_vt = self.generator.converter.convert(appTemp_dict['min'])
-        appTempMax_vt = self.generator.converter.convert(appTemp_dict['max'])
-        appTempAvg_vt = self.generator.converter.convert(appTemp_dict['avg'])
+        # Get our appTemp vectors. appTemp data is not normally archived so
+        # only try to get it if we have a binding for it. Wrap in a try..except
+        # to catch any errors. If we don't have a binding then set the vectors
+        # to None
+        if self.apptemp_binding is not None:
+            try:
+                (appTemp_time_vt, appTemp_dict) = getDaySummaryVectors(db_lookup('wd_binding'),
+                                                                       'appTemp',
+                                                                       _timespan,
+                                                                       ['min', 'max', 'avg'])
+                # Get our vector ValueTuple out of the dictionary and convert it
+                appTempMin_vt = self.generator.converter.convert(appTemp_dict['min'])
+                appTempMax_vt = self.generator.converter.convert(appTemp_dict['max'])
+                appTempAvg_vt = self.generator.converter.convert(appTemp_dict['avg'])
+            except weewx.UnknownBinding:
+                raise
+        else:
+            appTempMin_vt = None
+            appTempMax_vt = None
+            appTempAvg_vt = None
 
         # Get our windchill vector
         (windchill_time_vt, windchill_dict) = getDaySummaryVectors(db_lookup(),
@@ -561,9 +648,15 @@ class highchartsYear(SearchList):
         outTempMinRound = [roundNone(x,tempPlaces) for x in outTempMin_vt[0]]
         outTempMaxRound = [roundNone(x,tempPlaces) for x in outTempMax_vt[0]]
         outTempAvgRound = [roundNone(x,tempPlaces) for x in outTempAvg_vt[0]]
-        appTempMinRound = [roundNone(x,tempPlaces) for x in appTempMin_vt[0]]
-        appTempMaxRound = [roundNone(x,tempPlaces) for x in appTempMax_vt[0]]
-        appTempAvgRound = [roundNone(x,tempPlaces) for x in appTempAvg_vt[0]]
+        # round our appTemp values, if we don't have any then set it to None
+        try:
+            appTempMinRound = [roundNone(x,tempPlaces) for x in appTempMin_vt[0]]
+            appTempMaxRound = [roundNone(x,tempPlaces) for x in appTempMax_vt[0]]
+            appTempAvgRound = [roundNone(x,tempPlaces) for x in appTempAvg_vt[0]]
+        except TypeError:
+            appTempMinRound = None
+            appTempMaxRound = None
+            appTempAvgRound = None
         windchillAvgRound = [roundNone(x,tempPlaces) for x in windchillAvg_vt[0]]
         heatindexAvgRound = [roundNone(x,tempPlaces) for x in heatindexAvg_vt[0]]
         outHumidityMinRound = [roundNone(x,outHumidityPlaces) for x in outHumidity_dict['min'][0]]
@@ -590,10 +683,24 @@ class highchartsYear(SearchList):
         outTempMin_json = json.dumps(zip(time_ms, outTempMinRound))
         outTempMax_json = json.dumps(zip(time_ms, outTempMaxRound))
         outTempAvg_json = json.dumps(zip(time_ms, outTempAvgRound))
-        appTempMinMax_json = json.dumps(zip(time_ms, appTempMinRound, appTempMaxRound))
-        appTempMin_json = json.dumps(zip(time_ms, appTempMinRound))
-        appTempMax_json = json.dumps(zip(time_ms, appTempMaxRound))
-        appTempAvg_json = json.dumps(zip(time_ms, appTempAvgRound))
+        # appTemp. If we don't have any source data then set our JSON string to
+        # None
+        if appTempMinRound is not None and appTempMaxRound is not None:
+            appTempMinMax_json = json.dumps(zip(time_ms, appTempMinRound, appTempMaxRound))
+        else:
+            appTempMinMax_json = None
+        if appTempMinRound is not None:
+            appTempMin_json = json.dumps(zip(time_ms, appTempMinRound))
+        else:
+            appTempMin_json = None
+        if appTempMaxRound is not None:
+            appTempMax_json = json.dumps(zip(time_ms, appTempMaxRound))
+        else:
+            appTempMax_json = None
+        if appTempAvgRound is not None:
+            appTempAvg_json = json.dumps(zip(time_ms, appTempAvgRound))
+        else:
+            appTempAvg_json = None
         windchillAvg_json = json.dumps(zip(time_ms, windchillAvgRound))
         heatindexAvg_json = json.dumps(zip(time_ms, heatindexAvgRound))
         outHumidityMinMax_json = json.dumps(zip(time_ms, outHumidityMinRound, outHumidityMaxRound))

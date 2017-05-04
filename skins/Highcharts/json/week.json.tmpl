@@ -16,18 +16,22 @@
 ##                                                                           #
 ## Week observation plots JSON data file template                            #
 ##                                                                           #
-## Version: 0.1.0                                     Date: 22 November 2016 #
+## Version: 0.2.0                                     Date: 4 May 2017       #
 ##                                                                           #
 ##############################################################################
 [{
-"_version": "week.json.tmpl version 0.1.0",
+"_version": "week.json.tmpl version 0.2.0",
 "utcoffset": $utcOffset,
 "timespan": {"start": $weekPlotStart, "stop": $weekPlotEnd},
 ##
 "temperatureplot": {"series":
 {"outTemp": {"name": "Temperature", "data": $outTempWeekjson},
+#if $appTempWeekjson is not None
 "dewpoint": {"name": "Dew Point", "data": $dewpointWeekjson},
 "appTemp": {"name": "Apparent Temperature", "data": $appTempWeekjson}},
+#else
+"dewpoint": {"name": "Dew Point", "data": $dewpointWeekjson}},
+#end if
 "units": "$unit.label.outTemp"#slurp
 #if $varExists('$outTemp_min_range')
 , 
@@ -37,7 +41,10 @@
 #end if
 ##
 "windchillplot": {"series":
-{"appTemp": {"name": "Apparent Temperature", "data": $appTempWeekjson},
+{#slurp
+#if $appTempWeekjson is not None
+"appTemp": {"name": "Apparent Temperature", "data": $appTempWeekjson},
+#end if
 "windchill": {"name": "Wind Chill", "data": $windchillWeekjson},
 "heatindex": {"name": "Heat Index", "data": $heatindexWeekjson}},
 "units": "$unit.label.windchill"#slurp
@@ -100,8 +107,12 @@
 #end if
 ##
 "radiationplot": {"series":
+#if $insolationWeekjson is not None
 {"radiation": {"name": "Solar Radiation", "data": $radiationWeekjson},
 "insolation": {"name": "Theoretical Max Solar Radiation", "data": $insolationWeekjson}},
+#else
+{"radiation": {"name": "Solar Radiation", "data": $radiationWeekjson}},
+#end if
 "units": "$unit.label.radiation"#slurp
 #if $varExists('$radiation_min_range')
 , 

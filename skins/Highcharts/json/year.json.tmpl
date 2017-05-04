@@ -16,11 +16,11 @@
 ##                                                                           #
 ## Year observation plots JSON data file template                            #
 ##                                                                           #
-## Version: 0.1.0                                     Date: 22 November 2016 #
+## Version: 0.2.0                                     Date: 4 May 2017       #
 ##                                                                           #
 ##############################################################################
 [{
-"_version": "year.json.tmpl version 0.1.0", 
+"_version": "year.json.tmpl version 0.2.0", 
 "utcoffset": $utcOffset, 
 "timespan": {"start": $yearPlotStart, "stop": $yearPlotEnd}, 
 "temperatureplot": {
@@ -34,8 +34,12 @@
 }, 
 #end if
 "windchillplot": {
+#if $appTempMinMax_json is not None
 "appTempminmax": $appTempMinMax_json, 
+#end if
+#if $appTempAvg_json is not None
 "appTempaverage": $appTempAvg_json, 
+#end if
 "windchillaverage": $windchillAvg_json, 
 "heatindexaverage": $heatindexAvg_json, 
 "units": "$unit.label.outTemp"#slurp
