@@ -15,7 +15,8 @@
 #
 # Revision History
 #  16 May 2017           v0.2.1
-#       - version number change only
+#       - fixed errors in various 'Extras' settings (error previously hidden
+#         due to [[Windrose]]/[[WindRose]] issue)
 #  4 May 2017           v0.2.0
 #       - version number change only
 #  21 November 2016     v0.1.0
@@ -28,7 +29,7 @@ from distutils.version import StrictVersion
 from setup import ExtensionInstaller
 
 REQUIRED_VERSION = "3.4.0"
-HFW_VERSION = "0.2.0"
+HFW_VERSION = "0.2.1"
 
 def loader():
     return HfwInstaller()
@@ -133,23 +134,23 @@ class HfwInstaller(ExtensionInstaller):
                         },
                         'Extras': {
                             'MinRange': {
-                                'outTemp': '10, degree_C',
-                                'windchill': '10, degree_C',
-                                'barometer': '20, hPa',
+                                'outTemp': [10, 'degree_C'],
+                                'windchill': [10, 'degree_C'],
+                                'barometer': [20, 'hPa'],
                                 'windSpeed': '10',
-                                'rain': '5, mm',
+                                'rain': [5, 'mm'],
                                 'radiation': '500',
                                 'UV': '16'
                             },
                             'WindRose': {
                                 'title': 'Wind Rose',
                                 'source': 'windSpeed',
-                                'period': '86400, 604800, month, year',
+                                'period': [86400, 604800, 'month', 'year'],
                                 'aggregate_type': '',
                                 'aggregate_interval': '',
                                 'petals': '16',
-                                'petal_colors': 'aqua, 0x0099FF, 0x0033FF, 0x009900, 0x00CC00, 0x33FF33, 0xCCFF00',
-                                'speedfactor': '0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0',
+                                'petal_colors': ['aqua', '0x0099FF', '0x0033FF', '0x009900', '0x00CC00', '0x33FF33', '0xCCFF00'],
+                                'speedfactor': ['0.0', '0.1', '0.2', '0.3', '0.5', '0.7', '1.0'],
                                 'legend_title': 'True',
                                 'band_percent': 'True',
                                 'bullseye_percent': 'True',
