@@ -12,9 +12,12 @@
 # Search List Extension classes to support generation of JSON data file for
 # use by Highcharts to plot weewx observations.
 #
-# Version: 0.2.0                                    Date: 4 May 2017
+# Version: 0.2.1                                    Date: 16 May 2017
 #
 # Revision History
+#   16 May 2017         v0.2.1
+#       - Fixed bug with day/week windrose getSqlVectors call that resulted in 
+#         'IndexError: list index out of range' error on line 962.
 #   4 May 2017          v0.2.0
 #       - Removed hard coding of weeWX-WD bindings for appTemp and Insolation
 #         data. Now attempts to otain bindings for each from weeWX-WD, if
@@ -886,15 +889,15 @@ class highchartsWindRose(SearchList):
             # Get our wind speed vector
             (time_vec_speed_start_vt, time_vec_speed_vt, speed_vec_vt) = db_lookup().getSqlVectors(TimeSpan(timespan.stop-period + 1, timespan.stop),
                                                                                                    self.source,
-                                                                                                   self.agg_type,
-                                                                                                   self.agg_interval)
+                                                                                                   None,
+                                                                                                   None)
             # Convert it
             speed_vec_vt = self.generator.converter.convert(speed_vec_vt)
             # Get our wind direction vector
             (time_vec_dir_start_vt, time_vec_dir_stop_vt, direction_vec_vt) = db_lookup().getSqlVectors(TimeSpan(timespan.stop-period + 1, timespan.stop),
                                                                                                         self.dir,
-                                                                                                        self.agg_type,
-                                                                                                        self.agg_interval)
+                                                                                                        None,
+                                                                                                        None)
         else: # Get our vectors from daily summaries using custom getStatsVectors
             # Get our data tuples for speed
             (time_vec_speed_vt, speed_dict) = getDaySummaryVectors(db_lookup(),

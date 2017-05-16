@@ -1,3 +1,7 @@
+v0.2.1
+*   Fixed bug with day/week windrose getSqlVectors call that resulted in 
+    'IndexError: list index out of range' error on line 962 in 
+    highchartsSearchX.py.
 v0.2.0
 *   Removed hard coding of weeWX-WD bindings for appTemp and insolation. Now 
     attempts to otain bindings for each from weeWX-WD, if weeWX-WD is not 

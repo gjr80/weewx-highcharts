@@ -11,10 +11,12 @@
 #
 #                     Installer for Highcharts for weewx
 #
-# Version: 0.2.0                                    Date: 4 May 2017
+# Version: 0.2.1                                    Date: 16 May 2017
 #
 # Revision History
-#  4 May 2017           v0.1.0
+#  16 May 2017           v0.2.1
+#       - version number change only
+#  4 May 2017           v0.2.0
 #       - version number change only
 #  21 November 2016     v0.1.0
 #       - initial implementation

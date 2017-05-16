@@ -22,7 +22,7 @@ The preferred method to install the Highcharts for weewx extension is to use the
 
 1.  Download the latest Highcharts for weewx extension from the Highcharts for weewx [releases page](https://github.com/gjr80/weewx-highcharts/releases) into a directory accessible from the weewx machine.
 
-	    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.2.0/hfw-0.2.0.tar.gz
+	    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.2.1/hfw-0.2.1.tar.gz
 
 2.  Stop weewx:
 
@@ -34,15 +34,15 @@ The preferred method to install the Highcharts for weewx extension is to use the
 
 3.  Install the Highcharts for weewx extension downloaded at step 1 using the *wee_extension* utility:
 
-    	wee_extension --install=$DOWNLOAD_ROOT/hfw-0.2.0.tar.gz
+    	wee_extension --install=$DOWNLOAD_ROOT/hfw-0.2.1.tar.gz
 
     This will result in output similar to the following:
 
-        Request to install '/var/tmp/hfw-0.2.0.tar.gz'
-        Extracting from tar archive /var/tmp/hfw-0.2.0.tar.gz
+        Request to install '/var/tmp/hfw-0.2.1.tar.gz'
+        Extracting from tar archive /var/tmp/hfw-0.2.1.tar.gz
         Saving installer file to /home/weewx/bin/user/installer/Hfw
         Saved configuration dictionary. Backup copy at /home/weewx/weewx.conf.20161123124410
-        Finished installing extension '/var/tmp/hfw-0.2.0.tar.gz'
+        Finished installing extension '/var/tmp/hfw-0.2.1.tar.gz'
 
 4. Start weewx:
 
