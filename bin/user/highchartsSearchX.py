@@ -770,7 +770,7 @@ class highchartsWindRose(SearchList):
         SearchList.__init__(self, generator)
 
         # Get a dictionary of ous skin settings
-        self.windrose_dict = self.generator.skin_dict['Extras']['Windrose']
+        self.windrose_dict = self.generator.skin_dict['Extras']['WindRose']
         # Look for plot title, if not defined then set a default
         try:
             self.title = self.windrose_dict['title'].strip()
