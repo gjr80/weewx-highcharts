@@ -1,3 +1,7 @@
+v0.2.2
+*   Fixed bug in getDaySummaryVectors() that resulted in year wind direction 
+    plot always displaying 90 degrees.
+*   Minor reformatting of comments in various files
 v0.2.1
 *   Fixed bug with day/week windrose getSqlVectors call that resulted in
     'IndexError: list index out of range' error on line 962 in

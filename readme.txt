@@ -36,7 +36,7 @@ names are used below:
 weewx releases page (https://github.com/gjr80/weewx-highcharts/releases) into
 a directory accessible from the weewx machine.
 
-    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.2.1/hfw-0.2.1.tar.gz
+    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.2.2/hfw-0.2.2.tar.gz
 
 	where $DOWNLOAD_ROOT is the path to the directory where the Highcharts for 
     weewx extension is to be downloaded.  
@@ -52,15 +52,15 @@ a directory accessible from the weewx machine.
 3.  Install the Highcharts for weewx extension downloaded at step 1 using the 
 *wee_extension* utility:
 
-    wee_extension --install=$DOWNLOAD_ROOT/hfw-0.2.1.tar.gz
+    wee_extension --install=$DOWNLOAD_ROOT/hfw-0.2.2.tar.gz
 
     This will result in output similar to the following:
 
-        Request to install '/var/tmp/hfw-0.2.1.tar.gz'
-        Extracting from tar archive /var/tmp/hfw-0.2.1.tar.gz
+        Request to install '/var/tmp/hfw-0.2.2.tar.gz'
+        Extracting from tar archive /var/tmp/hfw-0.2.2.tar.gz
         Saving installer file to /home/weewx/bin/user/installer/Hfw
         Saved configuration dictionary. Backup copy at /home/weewx/weewx.conf.20161123124410
-        Finished installing extension '/var/tmp/hfw-0.2.1.tar.gz'
+        Finished installing extension '/var/tmp/hfw-0.2.2.tar.gz'
 
 4. Start weewx:
 
@@ -82,14 +82,14 @@ Manual installation
 weewx releases page (https://github.com/gjr80/weewx-highcharts/releases) into
 a directory accessible from the weewx machine.
 
-    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.2.1/hfw-0.2.1.tar.gz
+    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.2.2/hfw-0.2.2.tar.gz
 
 	where $DOWNLOAD_ROOT is the path to the directory where the Highcharts for 
     weewx extension is to be downloaded.  
 
 2.  Unpack the extension as follows:
 
-    tar xvfz hfw-0.2.1.tar.gz
+    tar xvfz hfw-0.2.2.tar.gz
 
 3.  Copy files from within the resulting folder as follows:
 

@@ -9,11 +9,13 @@
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details.
 #
-#                     Installer for Highcharts for weewx
+#                     Installer for Highcharts for WeeWX
 #
-# Version: 0.2.1                                    Date: 16 May 2017
+# Version: 0.2.2                                    Date: 4 September 2018
 #
 # Revision History
+#  4 Septenber 2018      v0.2.2
+#       - version number change only
 #  16 May 2017           v0.2.1
 #       - fixed errors in various 'Extras' settings (error previously hidden
 #         due to [[Windrose]]/[[WindRose]] issue)
@@ -29,7 +31,7 @@ from distutils.version import StrictVersion
 from setup import ExtensionInstaller
 
 REQUIRED_VERSION = "3.4.0"
-HFW_VERSION = "0.2.1"
+HFW_VERSION = "0.2.2"
 
 def loader():
     return HfwInstaller()

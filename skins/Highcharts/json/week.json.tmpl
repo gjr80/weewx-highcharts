@@ -1,26 +1,50 @@
 ##errorCatcher Echo
-##
-##This program is free software; you can redistribute it and/or modify it
-##under the terms of the GNU General Public License as published by the Free
-##Software Foundation; either version 2 of the License, or (at your option)
-##any later version.
-##
-##This program is distributed in the hope that it will be useful, but WITHOUT
-##ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-##FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-##more details.
-##
-##############################################################################
-##                                                                           #
-## Highcharts for weewx Extension                                            #
-##                                                                           #
-## Week observation plots JSON data file template                            #
-##                                                                           #
-## Version: 0.2.1                                     Date: 16 May 2017      #
-##                                                                           #
-##############################################################################
+#*
+A weeWX template to generate a JSON data file for weekly observation plots.
+
+Copyright (C) 2016-18 Gary Roderick                 gjroderick<at>gmail.com
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see http://www.gnu.org/licenses/.
+
+
+Description
+
+This template is part of the Highcharts for WeeWX extension and produces a text
+file containing JSON format data for use with Highcharts to plot WeeWX 
+observation data over a one week period.
+
+
+Pre-Requisites
+
+Highcharts for WeeWX extension
+PyEphem for inclusion of insolation data
+
+
+Version: 0.2.2                                      Date: 4 September 2018   
+
+Revision History
+
+    4 September 2018    v0.2.2
+        - reformatted comments
+    16 May 2017         v0.2.1
+        - no change, version number chnage only
+    4 May 2017          v0.2.0
+        - no change, version number chnage only
+    22 November 2016    v0.1.0
+        - initial implementation
+*#
 [{
-"_version": "week.json.tmpl version 0.2.0",
+"_version": "week.json.tmpl version 0.2.2",
 "utcoffset": $utcOffset,
 "timespan": {"start": $weekPlotStart, "stop": $weekPlotEnd},
 ##
