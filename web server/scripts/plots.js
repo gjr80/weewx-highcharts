@@ -1,6 +1,6 @@
 /*****************************************************************************
 
-v0.2.0                                          Last Update: 4 May 2017
+v0.2.2                                          Last Update: 4 September 2018
 
 Javascript to setup, configure and display Highcharts plots of weewx weather
 data.
@@ -44,6 +44,8 @@ To install/setup:
         changing the plot settings in this file and weewxtheme.js
 
 History
+    v0.2.2      4 September 2018
+        - version number chnage only
     v0.2.0      4 May 2017
         - ignores appTemp and insolation plots if no relevant data is available
     v0.1.0      22 November 2016
