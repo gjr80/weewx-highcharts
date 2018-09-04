@@ -1,20 +1,27 @@
+# highchartsSearchX.py.py
 #
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
+# Search List Extension to support the weewx-highcharts extension..
+#
+# Copyright (C) 2016-18 Gary Roderick               gjroderick<at>gmail.com
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
 #
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details.
 #
-# Search List Extension classes to support generation of JSON data file for
-# use by Highcharts to plot weewx observations.
+# You should have received a copy of the GNU General Public License along with
+# this program.  If not, see http://www.gnu.org/licenses/.
 #
-# Version: 0.2.1                                    Date: 16 May 2017
+# Version: 0.2.2                                    Date: 4 September 2018
 #
 # Revision History
+#   4 September 2018    v0.2.2
+#       - minor comment editing
 #   16 May 2017         v0.2.1
 #       - Fixed bug with day/week windrose getSqlVectors call that resulted in 
 #         'IndexError: list index out of range' error on line 962.
@@ -472,7 +479,7 @@ class highchartsWeek(SearchList):
         return [search_list_extension]
 
 class highchartsYear(SearchList):
-    """SearchList to generate JSON vectors for Highcharts week plots.""""""SearchList to generate JSON vectors for Highcharts year plots."""
+    """SearchList to generate JSON vectors for Highcharts week plots."""
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)
