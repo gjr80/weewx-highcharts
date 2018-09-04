@@ -68,10 +68,13 @@ def getDaySummaryVectors(db_manager, sql_type, timespan, agg_list='max'):
                       'vecavg' or 'vecdir'.
        """
 
-    # get our interpolation dictionary for the query
-    interDict = {'start'        : weeutil.weeutil.startOfDay(timespan.start),
-                 'stop'         : timespan.stop,
-                 'table_name'   : 'archive_day_%s' % sql_type}
+    # the list of supported aggregates
+    vector_aggs = ['gustdir', 'rms', 'vecavg', 'vecdir']
+    # sql field list for scalar types
+    scalar_fields = 'dateTime,min,mintime,max,maxtime,sum,count,wsum,sumtime'
+    # sql field list for vector types
+    vector_fields = ','.join([scalar_fields, 
+                              'max_dir,xsum,ysum,dirsumtime,squaresum,wsquaresum'])
     # setup up a list of lists for our vectors
     _vec = [list() for x in range(len(agg_list))]
     # initialise each list in the list of lists
@@ -84,11 +87,24 @@ def getDaySummaryVectors(db_manager, sql_type, timespan, agg_list='max'):
     # get the unit system in use
     _row = db_manager.getSql("SELECT usUnits FROM %s LIMIT 1;" % db_manager.table_name)
     std_unit_system = _row[0] if _row is not None else None
+    # the list of fields we need depend on whether we have a scalar type or a
+    # vector type, which one is it
+    if any(x in vector_aggs for x in agg_list):
+        # it's a vector
+        sql_fields = vector_fields
+    else:
+        # it's a scalar
+        sql_fields = scalar_fields
+    # get our interpolation dictionary for the query
+    interDict = {'start'        : weeutil.weeutil.startOfDay(timespan.start),
+                 'stop'         : timespan.stop,
+                 'table_name'   : 'archive_day_%s' % sql_type,
+                 'sql_fields'   : sql_fields}
     # get a cursor object for our query
     _cursor = db_manager.connection.cursor()
     try:
         # put together our SQL query string
-        sql_str = "SELECT * FROM %(table_name)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s" % interDict
+        sql_str = "SELECT %(sql_fields)s FROM %(table_name)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s" % interDict
         # loop through each record our query returns
         for _rec in _cursor.execute(sql_str):
             # loop through each aggregate we have been asked for
