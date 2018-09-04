@@ -45,7 +45,7 @@ To install/setup:
 
 History
     v0.2.2      4 September 2018
-        - version number chnage only
+        - version number change only
     v0.2.0      4 May 2017
         - ignores appTemp and insolation plots if no relevant data is available
     v0.1.0      22 November 2016
