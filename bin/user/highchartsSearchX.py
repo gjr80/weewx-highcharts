@@ -1,44 +1,45 @@
-# highchartsSearchX.py.py
-#
-# Search List Extension to support the weewx-highcharts extension..
-#
-# Copyright (C) 2016-18 Gary Roderick               gjroderick<at>gmail.com
-#
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your option) any
-# later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program.  If not, see http://www.gnu.org/licenses/.
-#
-# Version: 0.2.2                                    Date: 4 September 2018
-#
-# Revision History
-#   4 September 2018    v0.2.2
-#       - minor comment editing
-#   16 May 2017         v0.2.1
-#       - Fixed bug with day/week windrose getSqlVectors call that resulted in 
-#         'IndexError: list index out of range' error on line 962.
-#   4 May 2017          v0.2.0
-#       - Removed hard coding of weeWX-WD bindings for appTemp and Insolation
-#         data. Now attempts to otain bindings for each from weeWX-WD, if
-#         weeWX-WD is not installed bindings are sought in weewx.conf
-#         [StdReport][[Highcharts]]. If no binding can be found appTemp and
-#         insolation data is omitted.
-#   22 November 2016    v0.1.0
-#       - initial implementation
-#
+"""highchartsSearchX.py
+
+Search List Extension to support the weewx-highcharts extension..
+
+Copyright (C) 2016-19 Gary Roderick               gjroderick<at>gmail.com
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see http://www.gnu.org/licenses/.
+
+Version: 1.0.0.a1                                  Date: 29 December 2019
+
+Revision History
+    29 December 2019    v1.0.0
+        - now support WeeWX 4.0.0 under python 2 and python 3
+    4 September 2018    v0.2.2
+        - minor comment editing
+    16 May 2017         v0.2.1
+        - Fixed bug with day/week windrose getSqlVectors call that resulted in
+          'IndexError: list index out of range' error on line 962.
+    4 May 2017          v0.2.0
+        - Removed hard coding of weeWX-WD bindings for appTemp and Insolation
+          data. Now attempts to obtain bindings for each from WeeWX-WD, if
+          WeeWX-WD is not installed bindings are sought in weewx.conf
+          [StdReport][[Highcharts]]. If no binding can be found appTemp and
+          insolation data is omitted.
+    22 November 2016    v0.1.0
+       - initial implementation
+"""
 
 import calendar
 import datetime
 import json
-import syslog
+import logging
 import time
 import weewx
 
@@ -48,21 +49,7 @@ from weewx.cheetahgenerator import SearchList
 from weewx.units import ValueTuple, getStandardUnitType, convert, _getUnitGroup
 from weeutil.weeutil import TimeSpan, genMonthSpans, startOfInterval, option_as_list, startOfDay
 
-def logmsg(level, msg):
-    syslog.syslog(level, 'highchartsSearchX: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def logdbg2(msg):
-    if weewx.debug >= 2:
-        logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
+log = logging.getLogger(__name__)
 
 def roundNone(value, places):
     """Round value to 'places' places but also permit a value of None."""
@@ -106,7 +93,7 @@ class highchartsMinRanges(SearchList):
         SearchList.__init__(self, generator)
 
     def get_extension_list(self, timespan, db_lookup):
-        """Obatin y-axis minimum range values and return as a list of
+        """Obtain y-axis minimum range values and return as a list of
            dictionaries.
 
         Parameters:
@@ -145,7 +132,8 @@ class highchartsMinRanges(SearchList):
                 mr_dict[_key + '_min_range'] = _range
 
         t2 = time.time()
-        logdbg2("highchartsMinRanges SLE executed in %0.3f seconds" % (t2 - t1))
+        if weewx.debug >= 2:
+            log.debug("highchartsMinRanges SLE executed in %0.3f seconds" % (t2 - t1))
 
         # Return our data dict
         return [mr_dict]
@@ -230,9 +218,9 @@ class highchartsWeek(SearchList):
         outTemp_vt = self.generator.converter.convert(outTemp_vt)
         # Can't use ValueHelper so round our results manually
         # Get the number of decimal points
-        tempRound = int(self.generator.skin_dict['Units']['StringFormats'].get(outTemp_vt[1], "1f")[-2])
+        temp_round = int(self.generator.skin_dict['Units']['StringFormats'].get(outTemp_vt[1], "1f")[-2])
         # Do the rounding
-        outTempRound_vt =  [roundNone(x,tempRound) for x in outTemp_vt[0]]
+        outTempRound_vt =  [roundNone(x,temp_round) for x in outTemp_vt[0]]
         # Get our time vector in ms (Highcharts requirement)
         # Need to do it for each getSqlVectors result as they might be different
         outTemp_time_ms =  [float(x) * 1000 for x in time_stop_vt[0]]
@@ -473,7 +461,8 @@ class highchartsWeek(SearchList):
                                  'weekPlotEnd' : timespan.stop * 1000}
 
         t2 = time.time()
-        logdbg2("highchartsWeek SLE executed in %0.3f seconds" % (t2 - t1))
+        if weewx.debug >= 2:
+            log.debug("highchartsWeek SLE executed in %0.3f seconds" % (t2 - t1))
 
         # Return our json data
         return [search_list_extension]
@@ -502,7 +491,7 @@ class highchartsYear(SearchList):
                 if self.apptemp_binding == '':
                     self.apptemp_binding = None
             except KeyError:
-                # Should only occur if the user chnaged the name of
+                # Should only occur if the user changed the name of
                 # [[Highcharts]] in [StdReport]
                 self.apptemp_binding = None
 
@@ -764,7 +753,8 @@ class highchartsYear(SearchList):
                                  'yearPlotEnd' : _timespan.stop * 1000}
 
         t2 = time.time()
-        logdbg2("highchartsYear SLE executed in %0.3f seconds" % (t2 - t1))
+        if weewx.debug >= 2:
+            log.debug("highchartsYear SLE executed in %0.3f seconds" % (t2 - t1))
 
         # Return our json data
         return [search_list_extension]
@@ -834,7 +824,7 @@ class highchartsWindRose(SearchList):
             self.petals = int(self.windrose_dict['petals'])
         except KeyError:
             self.petals = 8
-        if self.petals == None or self.petals == 0:
+        if self.petals is None or self.petals == 0:
             self.petals = 8
         # Set our list of direction based on number of petals
         if self.petals == 16:
@@ -862,21 +852,21 @@ class highchartsWindRose(SearchList):
             self.precision = int(self.windrose_dict['precision'])
         except KeyError:
             self.precision = 1
-        if self.precision == None:
+        if self.precision is None:
             self.precision = 1
         # Look for bullseye diameter, if not defined then set a default
         try:
             self.bullseye_size = int(self.windrose_dict['bullseye_size'])
         except KeyError:
             self.bullseye_size = 3
-        if self.bullseye_size == None:
+        if self.bullseye_size is None:
             self.bullseye_size = 3
         # Look for bullseye colour, if not defined then set some defaults
         try:
             self.bullseye_colour = self.windrose_dict['bullseye_color']
         except KeyError:
             self.bullseye_colour = 'white'
-        if self.bullseye_colour == None:
+        if self.bullseye_colour is None:
             self.bullseye_colour = 'white'
         if self.bullseye_colour[0:2] == '0x':
             self.bullseye_colour = '#' + self.bullseye_colour[2:]
@@ -924,31 +914,31 @@ class highchartsWindRose(SearchList):
         speedUnits_str = self.generator.skin_dict['Units']['Labels'].get(speed_vec_vt[1]).strip()
         # To get a better display we will set our upper speed to a multiple of 10
         # Find maximum speed from our data
-        maxSpeed = max(speed_vec_vt[0])
+        max_speed = max(speed_vec_vt[0])
         # Set upper speed range for our plot
-        maxSpeedRange = (int(maxSpeed/10.0) + 1) * 10
+        max_speed_range = (int(max_speed/10.0) + 1) * 10
         # Setup a list to hold the cutoff speeds for our stacked columns on our
         # wind rose.
-        speedList = [0 for x in range(7)]
+        speed_list = [0 for x in range(7)]
         # Setup a list to hold the legend item text for each of our speed bands
         # (or legend labels)
-        legendLabels = ["" for x in range(7)]
-        legendNoLabels = ["" for x in range(7)]
+        legend_labels = ["" for x in range(7)]
+        legend_no_labels = ["" for x in range(7)]
         i = 1
         while i<7:
-            speedList[i] = self.speedfactor[i]*maxSpeedRange
+            speed_list[i] = self.speedfactor[i]*max_speed_range
             i += 1
         # Setup 2D list for wind direction
-        # windBin[0][0..self.petals] holds the calm or 0 speed counts for each
+        # wind_bin[0][0..self.petals] holds the calm or 0 speed counts for each
         # of self.petals (usually 16) compass directions ([0][0] for N, [0][1]
         # for ENE (or NE oe E depending self.petals) etc).
-        # windBin[1][0..self.petals] holds the 1st speed band speed counts for
+        # wind_bin[1][0..self.petals] holds the 1st speed band speed counts for
         # each of self.petals (usually 16) compass directions ([1][0] for
         # N, [1][1] for ENE (or NE oe E depending self.petals) etc).
-        windBin = [[0 for x in range(self.petals)] for x in range(7)]
+        wind_bin = [[0 for x in range(self.petals)] for x in range(7)]
         # Setup a list to hold sample count (speed>0) for each direction. Used
         # to aid in bullseye scaling
-        dirBin = [0 for x in range(self.petals)]
+        dir_bin = [0 for x in range(self.petals)]
         # Setup list to hold obs counts for each speed range (irrespective of
         # direction)
         # [0] = calm
@@ -957,11 +947,11 @@ class highchartsWindRose(SearchList):
         # .....
         # [6] = >4th speed and <5th speed
         # [7] = >5th speed and <6th speed
-        speedBin = [0 for x in range(7)]
+        speed_bin = [0 for x in range(7)]
         # How many obs do we have?
         samples = len(time_vec_speed_vt[0])
         # Calc factor to be applied to convert counts to %
-        pcentFactor = 100.0/samples
+        pcent_factor = 100.0/samples
         # Loop through each sample and increment direction counts
         # and speed ranges for each direction as necessary. 'None'
         # direction is counted as 'calm' (or 0 speed) and
@@ -970,36 +960,36 @@ class highchartsWindRose(SearchList):
         i = 0
         while i < samples:
             if (speed_vec_vt[0][i] is None) or (direction_vec_vt[0][i] is None):
-                speedBin[0] +=1
+                speed_bin[0] +=1
             else:
                 bin = int((direction_vec_vt[0][i]+11.25)/22.5)%self.petals
                 if speed_vec_vt[0][i] <= self.calm_limit:
-                    speedBin[0] +=1
-                elif speed_vec_vt[0][i] > speedList[5]:
-                    windBin[6][bin] += 1
-                elif speed_vec_vt[0][i] > speedList[4]:
-                    windBin[5][bin] += 1
-                elif speed_vec_vt[0][i] > speedList[3]:
-                    windBin[4][bin] += 1
-                elif speed_vec_vt[0][i] > speedList[2]:
-                    windBin[3][bin] += 1
-                elif speed_vec_vt[0][i] > speedList[1]:
-                    windBin[2][bin] += 1
+                    speed_bin[0] +=1
+                elif speed_vec_vt[0][i] > speed_list[5]:
+                    wind_bin[6][bin] += 1
+                elif speed_vec_vt[0][i] > speed_list[4]:
+                    wind_bin[5][bin] += 1
+                elif speed_vec_vt[0][i] > speed_list[3]:
+                    wind_bin[4][bin] += 1
+                elif speed_vec_vt[0][i] > speed_list[2]:
+                    wind_bin[3][bin] += 1
+                elif speed_vec_vt[0][i] > speed_list[1]:
+                    wind_bin[2][bin] += 1
                 elif speed_vec_vt[0][i] > 0:
-                    windBin[1][bin] += 1
+                    wind_bin[1][bin] += 1
                 else:
-                    windBin[0][bin] += 1
+                    wind_bin[0][bin] += 1
             i += 1
         i=0
-        # Our windBin values are counts, need to change them to % of total samples
+        # Our wind_bin values are counts, need to change them to % of total samples
         # and round them to self.precision decimal places.
         # At the same time, to help with bullseye scaling lets count how many
         # samples we have (of any speed>0) for each direction
         while i<7:
             j=0
             while j<self.petals:
-                dirBin[j] += windBin[i][j]
-                windBin[i][j] = round(pcentFactor * windBin[i][j],self.precision)
+                dir_bin[j] += wind_bin[i][j]
+                wind_bin[i][j] = round(pcent_factor * wind_bin[i][j],self.precision)
                 j += 1
             i += 1
         # Bullseye diameter is specified in skin.conf as a % of y axis range on
@@ -1008,69 +998,69 @@ class highchartsWindRose(SearchList):
         # and Highcharts and some javascript takes care of the rest. # First we
         # need to work out our y axis max and the use skin.conf bullseye size
         # value to calculate the -ve value for our y axis min.
-        maxDirPercent = round(pcentFactor * max(dirBin),self.precision) # the
+        max_dir_percent = round(pcent_factor * max(dir_bin),self.precision) # the
             # size of our largest 'rose petal'
-        maxYaxis = 10.0 * (1 + int(maxDirPercent/10.0)) # the y axis max value
-        bullseyeRadius = maxYaxis * self.bullseye_size/100.0 # our bullseye
+        max_y_axis = 10.0 * (1 + int(max_dir_percent/10.0)) # the y axis max value
+        bullseye_radius = max_y_axis * self.bullseye_size/100.0 # our bullseye
             # radius in y axis units
         # Need to get the counts for each speed band. To get this go through
         # each speed band and then through each petal adding the petal speed
         # 'count' to our total for each band and add the speed band counts to
-        # the relevant speedBin. Values are already %.
+        # the relevant speed_bin. Values are already %.
         j = 0
         while j<7:
             i = 0
             while i<self.petals:
-                speedBin[j] += windBin[j][i]
+                speed_bin[j] += wind_bin[j][i]
                 i += 1
             j += 1
         # Determine our legend labels. Need to determine actual speed band
         # ranges, add unit and if necessary add % for that band
-        calmPercent_str = str(round(speedBin[0] * pcentFactor,self.precision)) + "%"
+        calm_percent_str = str(round(speed_bin[0] * pcent_factor,self.precision)) + "%"
         if self.band_percent:
-            legendLabels[0]="Calm (" + calmPercent_str + ")"
-            legendNoLabels[0]="Calm (" + calmPercent_str + ")"
+            legend_labels[0]="Calm (" + calm_percent_str + ")"
+            legend_no_labels[0]="Calm (" + calm_percent_str + ")"
         else:
-            legendLabels[0]="Calm"
-            legendNoLabels[0]="Calm"
+            legend_labels[0]="Calm"
+            legend_no_labels[0]="Calm"
         i=1
         while i<7:
             if self.band_percent:
-                legendLabels[i] = str(roundInt(speedList[i-1],0)) + "-" + \
-                    str(roundInt(speedList[i],0)) + speedUnits_str + " (" + \
-                    str(round(speedBin[i] * pcentFactor,self.precision)) + "%)"
-                legendNoLabels[i] = str(roundInt(speedList[i-1],0)) + "-" + \
-                    str(roundInt(speedList[i],0)) + " (" + \
-                    str(round(speedBin[i] * pcentFactor,self.precision)) + "%)"
+                legend_labels[i] = str(roundInt(speed_list[i-1],0)) + "-" + \
+                    str(roundInt(speed_list[i],0)) + speedUnits_str + " (" + \
+                    str(round(speed_bin[i] * pcent_factor,self.precision)) + "%)"
+                legend_no_labels[i] = str(roundInt(speed_list[i-1],0)) + "-" + \
+                    str(roundInt(speed_list[i],0)) + " (" + \
+                    str(round(speed_bin[i] * pcent_factor,self.precision)) + "%)"
             else:
-                legendLabels[i] = str(roundInt(speedList[i-1],0)) + "-" + \
-                    str(roundInt(speedList[i],0)) + speedUnits_str
-                legendNoLabels[i] = str(roundInt(speedList[i-1],0)) + "-" + \
-                    str(roundInt(speedList[i],0))
+                legend_labels[i] = str(roundInt(speed_list[i-1],0)) + "-" + \
+                    str(roundInt(speed_list[i],0)) + speedUnits_str
+                legend_no_labels[i] = str(roundInt(speed_list[i-1],0)) + "-" + \
+                    str(roundInt(speed_list[i],0))
             i += 1
         # Build up our JSON result string
-        jsonResult_str = '[{"name": "' + legendLabels[6] + '", "data": ' + \
-            json.dumps(windBin[6]) + '}'
-        jsonResultNoLabel_str = '[{"name": "' + legendNoLabels[6] + \
-            '", "data": ' + json.dumps(windBin[6]) + '}'
+        json_result_str = '[{"name": "' + legend_labels[6] + '", "data": ' + \
+            json.dumps(wind_bin[6]) + '}'
+        json_result_no_label_str = '[{"name": "' + legend_no_labels[6] + \
+            '", "data": ' + json.dumps(wind_bin[6]) + '}'
         i=5
         while i>0:
-            jsonResult_str += ', {"name": "' + legendLabels[i] + '", "data": ' + \
-                json.dumps(windBin[i]) + '}'
-            jsonResultNoLabel_str += ', {"name": "' + legendNoLabels[i] + \
-                '", "data": ' + json.dumps(windBin[i]) + '}'
+            json_result_str += ', {"name": "' + legend_labels[i] + '", "data": ' + \
+                json.dumps(wind_bin[i]) + '}'
+            json_result_no_label_str += ', {"name": "' + legend_no_labels[i] + \
+                '", "data": ' + json.dumps(wind_bin[i]) + '}'
             i -= 1
         # Add ] to close our json array
-        jsonResult_str += ']'
+        json_result_str += ']'
 
         # Fill our results dictionary
-        wr_dict['windrosejson'] = jsonResult_str
-        jsonResultNoLabel_str += ']'
-        wr_dict['windrosenolabeljson'] = jsonResultNoLabel_str
+        wr_dict['windrosejson'] = json_result_str
+        json_result_no_label_str += ']'
+        wr_dict['windrosenolabeljson'] = json_result_no_label_str
         # Get our xAxis categories in json format
         wr_dict['xAxisCategoriesjson'] = json.dumps(self.directions)
         # Get our yAxis min/max settings
-        wr_dict['yAxisjson'] = '{"max": %f, "min": %f}' % (maxYaxis, -1.0 * bullseyeRadius)
+        wr_dict['yAxisjson'] = '{"max": %f, "min": %f}' % (max_y_axis, -1.0 * bullseye_radius)
         # Get our stacked column colours in json format
         wr_dict['coloursjson'] = json.dumps(self.petal_colours)
         # Manually construct our plot title in json format
@@ -1089,9 +1079,9 @@ class highchartsWindRose(SearchList):
             legend_title_no_label_json = "[null]"
         wr_dict['legendTitlejson'] = legend_title_json
         wr_dict['legendTitleNoLabeljson'] = legend_title_no_label_json
-        wr_dict['bullseyejson'] = '{"radius": %f, "color": "%s", "text": "%s"}' % (bullseyeRadius,
+        wr_dict['bullseyejson'] = '{"radius": %f, "color": "%s", "text": "%s"}' % (bullseye_radius,
                                                                                    self.bullseye_colour,
-                                                                                   calmPercent_str)
+                                                                                   calm_percent_str)
 
         return wr_dict
 
@@ -1177,19 +1167,20 @@ class highchartsWindRose(SearchList):
                         period = time.mktime(_stop_dt.timetuple()) - time.mktime(_start_dt.timetuple())
                 # Set any aggregation types/intervals if we have a period > 1 week
                 if period >= 2678400: # nominal month
-                    if self.agg_type == None:
+                    if self.agg_type is None:
                         self.agg_type = 'avg'
-                    if self.agg_interval == None:
+                    if self.agg_interval is None:
                         self.agg_interval = 86400
                 elif period >= 604800: # nominal week:
-                    if self.agg_interval == None:
+                    if self.agg_interval is None:
                         self.agg_interval = 3600
                 # Can now get our windrose data
                 _suffix = str(period) if _period not in ['day', 'week', 'month', 'year', 'all', 'alltime'] else str(_period)
                 sle_dict['wr' + _suffix] = self.calcWindRose(timespan, db_lookup, period)
 
         t2 = time.time()
-        logdbg2("highchartsWindRose SLE executed in %0.3f seconds" % (t2 - t1))
+        if weewx.debug >= 2:
+            log.debug("highchartsWindRose SLE executed in %0.3f seconds" % (t2 - t1))
 
         # Return our json data
         return [sle_dict]
