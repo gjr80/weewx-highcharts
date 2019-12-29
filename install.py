@@ -1,37 +1,39 @@
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-#                     Installer for Highcharts for WeeWX
-#
-# Version: 0.2.2                                    Date: 4 September 2018
-#
-# Revision History
-#  4 Septenber 2018      v0.2.2
-#       - version number change only
-#  16 May 2017           v0.2.1
-#       - fixed errors in various 'Extras' settings (error previously hidden
-#         due to [[Windrose]]/[[WindRose]] issue)
-#  4 May 2017           v0.2.0
-#       - version number change only
-#  21 November 2016     v0.1.0
-#       - initial implementation
-#
+"""
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+                     Installer for Highcharts for WeeWX
+
+ Version: 1.0.0a1                                       Date: 29 December 2019
+
+ Revision History
+    29 December 2019    v1.0.0
+         - now supports WeeWX 4.0.0 under python 2 or python 3
+    4 September 2018    v0.2.2
+        - version number change only
+    16 May 2017         v0.2.1
+        - fixed errors in various 'Extras' settings (error previously hidden
+          due to [[Windrose]]/[[WindRose]] issue)
+    4 May 2017          v0.2.0
+        - version number change only
+    21 November 2016    v0.1.0
+        - initial implementation
+"""
 
 import weewx
 
 from distutils.version import StrictVersion
 from setup import ExtensionInstaller
 
-REQUIRED_VERSION = "3.4.0"
-HFW_VERSION = "0.2.2"
+# TODO. Fix before release
+REQUIRED_VERSION = "4.0.0b5"
+HFW_VERSION = "1.0.0"
 
 def loader():
     return HfwInstaller()
@@ -39,16 +41,16 @@ def loader():
 class HfwInstaller(ExtensionInstaller):
     def __init__(self):
         if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_VERSION):
-            msg = "%s requires weewx %s or greater, found %s" % ('Hfw ' + HFW_VERSION,
+            msg = "%s requires WeeWX %s or greater, found %s" % ('Hfw ' + HFW_VERSION,
                                                                  REQUIRED_VERSION,
                                                                  weewx.__version__)
             raise weewx.UnsupportedFeature(msg)
         super(HfwInstaller, self).__init__(
             version=HFW_VERSION,
             name='Hfw',
-            description='weewx support for plotting observational data using Highcharts.',
+            description='WeeWX support for plotting observational data using Highcharts.',
             author="Gary Roderick",
-            author_email="gjroderick@gmail.com",
+            author_email="gjroderick<@>gmail.com",
             config={
                 'StdReport': {
                     'Highcharts': {
