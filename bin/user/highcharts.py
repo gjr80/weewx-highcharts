@@ -1,36 +1,38 @@
-# highcharts.py
-#
-# A function to return a vector of aggregate data based on the daily summaries.
-#
-# Copyright (C) 2016-18 Gary Roderick               gjroderick<at>gmail.com
-#
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your option) any
-# later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program.  If not, see http://www.gnu.org/licenses/.
-#
-#
-# Version: 0.2.2                                    Date: 4 September 2018
-#
-# Revision History
-#   4 September 2018    v0.2.2
-#       - fixed error in getDaySummaryVectors aggregate calculations due to 
-#         WeeWX archive_day_xxxxx schema chnage
-#   16 May 2017         v0.2.1
-#       - no change, version number chnage only
-#   4 May 2017          v0.2.0
-#       - no change, version number chnage only
-#   22 November 2016    v0.1.0
-#       - initial implementation
+"""ighcharts.py
 
+A function to return a vector of aggregate data based on the daily summaries.
+
+Copyright (C) 2016-19 Gary Roderick               gjroderick<at>gmail.com
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see http://www.gnu.org/licenses/.
+
+
+Version: 1.0.0.a1                                  Date: 29 December 2019
+
+Revision History
+    29 December 2019    v1.0.0
+        - now support WeeWX 4.0.0 under python 2 and python 3
+    4 September 2018    v0.2.2
+        - fixed error in getDaySummaryVectors aggregate calculations due to
+          WeeWX archive_day_xxxxx schema change
+    16 May 2017         v0.2.1
+        - no change, version number change only
+    4 May 2017          v0.2.0
+        - no change, version number change only
+    22 November 2016    v0.1.0
+        - initial implementation
+"""
+import logging
 import math
 import weewx
 import weeutil.weeutil
@@ -38,17 +40,6 @@ import syslog
 
 from weewx.units import getStandardUnitType, ValueTuple
 
-def logmsg(level, msg):
-    syslog.syslog(level, 'highcharts: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 def getDaySummaryVectors(db_manager, sql_type, timespan, agg_list='max'):
     """ Return a vector of aggregate data from the WeeWX daily summaries.
@@ -96,15 +87,15 @@ def getDaySummaryVectors(db_manager, sql_type, timespan, agg_list='max'):
         # it's a scalar
         sql_fields = scalar_fields
     # get our interpolation dictionary for the query
-    interDict = {'start'        : weeutil.weeutil.startOfDay(timespan.start),
-                 'stop'         : timespan.stop,
-                 'table_name'   : 'archive_day_%s' % sql_type,
-                 'sql_fields'   : sql_fields}
+    inter_dict = {'start': weeutil.weeutil.startOfDay(timespan.start),
+                  'stop': timespan.stop,
+                  'table_name': 'archive_day_%s' % sql_type,
+                  'sql_fields': sql_fields}
     # get a cursor object for our query
     _cursor = db_manager.connection.cursor()
     try:
         # put together our SQL query string
-        sql_str = "SELECT %(sql_fields)s FROM %(table_name)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s" % interDict
+        sql_str = "SELECT %(sql_fields)s FROM %(table_name)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s" % inter_dict
         # loop through each record our query returns
         for _rec in _cursor.execute(sql_str):
             # loop through each aggregate we have been asked for
@@ -135,13 +126,13 @@ def getDaySummaryVectors(db_manager, sql_type, timespan, agg_list='max'):
                     _result = int(_rec[4]) if _rec[4] else None
                 elif agg == 'count':
                     _result = int(_rec[6]) if _rec[6] else None
-                elif agg == 'avg' :
+                elif agg == 'avg':
                     _result = _rec[7]/_rec[8] if _rec[6] else None
-                elif agg == 'rms' :
-                    _result =  math.sqrt(_rec[14]/_rec[8]) if _rec[6] else None
-                elif agg == 'vecavg' :
+                elif agg == 'rms':
+                    _result = math.sqrt(_rec[14]/_rec[8]) if _rec[6] else None
+                elif agg == 'vecavg':
                     _result = math.sqrt((_rec[10]**2 + _rec[11]**2) / _rec[8]**2) if _rec[6] else None
-                elif agg == 'vecdir' :
+                elif agg == 'vecdir':
                     if _rec[10] == 0.0 and _rec[11] == 0.0:
                         _result = None
                     elif _rec[10] and _rec[11]:
@@ -165,7 +156,7 @@ def getDaySummaryVectors(db_manager, sql_type, timespan, agg_list='max'):
     # loop through each aggregate we were asked for getting unit and group and producing a ValueTuple
     # and adding to our result dictionary
     for agg in agg_list:
-        (t,g) = weewx.units.getStandardUnitType(std_unit_system, sql_type, agg)
-        _return[agg]=ValueTuple(_vec[agg_list.index(agg)], t, g)
+        (t, g) = weewx.units.getStandardUnitType(std_unit_system, sql_type, agg)
+        _return[agg] = ValueTuple(_vec[agg_list.index(agg)], t, g)
     # return our time vector and dictionary of aggregate vectors
-    return (ValueTuple(_time_vec, _time_type, _time_group), _return)
+    return ValueTuple(_time_vec, _time_type, _time_group), _return
