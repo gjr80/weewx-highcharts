@@ -6,7 +6,7 @@ v0.2.1
 *   Fixed bug with day/week windrose getSqlVectors call that resulted in
     'IndexError: list index out of range' error on line 962 in
     highchartsSearchX.py.
-*   Fixed inconsistemt naming of [Extra][[WindRose]] stanza in skin.conf
+*   Fixed inconsistent naming of [Extra][[WindRose]] stanza in skin.conf
     (this prevented weewx.conf values overriding those in skin.conf)
 *   Fixed incorrect [Extras] settings in extension installer (setup.py)
     (this error was masked by the [Extras][[WindRose]] naming issue above)
