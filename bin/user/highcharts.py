@@ -1,4 +1,4 @@
-"""ighcharts.py
+"""highcharts.py
 
 A function to return a vector of aggregate data based on the daily summaries.
 
