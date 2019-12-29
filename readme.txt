@@ -1,13 +1,13 @@
-The Highcharts for weewx extension provides graphical plots of weewx 
+The Highcharts for WeeWX extension provides graphical plots of WeeWX
 observational data using the Highcharts charting tool.
 
-Highcharts for weewx consists of a skin generating two reports, a number of 
+Highcharts for WeeWX consists of a skin generating two reports, a number of
 Search List Extensions (SLE) and supporting JavaScript.
 
 Pre-Requisites
 
-Highcharts for weewx requires Weewx v3.4.0 or greater. The display of the 
-Highcharts for weewx extension data on a web page using the included Javascript 
+Highcharts for WeeWX requires Weewx v3.4.0 or greater. The display of the
+Highcharts for WeeWX extension data on a web page using the included Javascript
 files requires the Highcharts Highstock charting tool and JQuery JavaScript 
 library.
 
@@ -16,43 +16,47 @@ Installation Instructions
 Installation using the wee_extension utility 
 
 Note:   Symbolic names are used below to refer to some file location on the 
-weewx system. These symbolic names allow a common name to be used to refer to 
+WeeWX system. These symbolic names allow a common name to be used to refer to
 a directory that may be different from system to system. The following symbolic 
 names are used below:
 -   $DOWNLOAD_ROOT. The path to the directory containing the downloaded 
-    Highcharts for weewx extension.
--   $HTML_ROOT. The path to the directory where weewx generated reports are 
+    Highcharts for WeeWX extension.
+-   $HTML_ROOT. The path to the directory where WeeWX generated reports are
     saved. This directory is normally set in the [StdReport] section of 
-    weewx.conf. Refer to 'where to find things' in the weewx User's Guide: 
+    weewx.conf. Refer to 'where to find things' in the WeeWX User's Guide:
     http://weewx.com/docs/usersguide.htm#Where_to_find_things for further 
     information.
--   $SKIN_ROOT. The path to the directory where weewx skin folders are located
+-   $SKIN_ROOT. The path to the directory where WeeWX skin folders are located
     This directory is normally set in the [StdReport] section of 
-    weewx.conf. Refer to 'where to find things' in the weewx User's Guide: 
+    weewx.conf. Refer to 'where to find things' in the WeeWX User's Guide:
     http://weewx.com/docs/usersguide.htm#Where_to_find_things for further 
     information.
 
-1.  Download the latest Highcharts for weewx extension from the Highcharts for
-weewx releases page (https://github.com/gjr80/weewx-highcharts/releases) into
-a directory accessible from the weewx machine.
+1.  Download the latest Highcharts for WeeWX extension from the Highcharts for
+WeeWX releases page (https://github.com/gjr80/weewx-highcharts/releases) into
+a directory accessible from the WeeWX machine.
 
-    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.2.2/hfw-0.2.2.tar.gz
+    $ wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.2.2/hfw-0.2.2.tar.gz
 
 	where $DOWNLOAD_ROOT is the path to the directory where the Highcharts for 
-    weewx extension is to be downloaded.  
+    WeeWX extension is to be downloaded.
 
-2.  Stop weewx:
+2.  Stop WeeWX:
 
-    sudo /etc/init.d/weewx stop
+    $ sudo /etc/init.d/weewx stop
 
 	or
 
-    sudo service weewx stop
+    $ sudo service weewx stop
 
-3.  Install the Highcharts for weewx extension downloaded at step 1 using the 
+    or
+
+    $ sudo systemctl stop weewx
+
+3.  Install the Highcharts for WeeWX extension downloaded at step 1 using the
 *wee_extension* utility:
 
-    wee_extension --install=$DOWNLOAD_ROOT/hfw-0.2.2.tar.gz
+    $ wee_extension --install=$DOWNLOAD_ROOT/hfw-0.2.2.tar.gz
 
     This will result in output similar to the following:
 
@@ -62,46 +66,50 @@ a directory accessible from the weewx machine.
         Saved configuration dictionary. Backup copy at /home/weewx/weewx.conf.20161123124410
         Finished installing extension '/var/tmp/hfw-0.2.2.tar.gz'
 
-4. Start weewx:
+4. Start WeeWX:
 
-    sudo /etc/init.d/weewx start
+    $ sudo /etc/init.d/weewx start
 
 	or
 
-    sudo service weewx start
+    $ sudo service weewx start
 
-This will result in the Highcharts for weewx JSON data files being generated 
-during each report generation cycle. A default installation will resulting in 
-the generated JSON data files being placed in the $HTML_ROOT/json directory. 
-The Highcharts for weewx installation can be further customized (eg units of 
-measure, file locations etc) by referring to the Highcharts for weewx wiki.
+    or
+
+    $ sudo systemctl start weewx
+
+This will result in the Highcharts for WeeWX JSON data files being generated
+during each report generation cycle. A default installation will result in the
+generated JSON data files being placed in the $HTML_ROOT/json directory. The
+Highcharts for WeeWX installation can be further customized (eg units of
+measure, file locations etc) by referring to the Highcharts for WeeWX wiki.
 
 Manual installation
 
-1.  Download the latest Highcharts for weewx extension from the Highcharts for
-weewx releases page (https://github.com/gjr80/weewx-highcharts/releases) into
-a directory accessible from the weewx machine.
+1.  Download the latest Highcharts for WeeWX extension from the Highcharts for
+WeeWX releases page (https://github.com/gjr80/weewx-highcharts/releases) into
+a directory accessible from the WeeWX machine.
 
-    wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.2.2/hfw-0.2.2.tar.gz
+    $ wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v0.2.2/hfw-0.2.2.tar.gz
 
 	where $DOWNLOAD_ROOT is the path to the directory where the Highcharts for 
-    weewx extension is to be downloaded.  
+    WeeWX extension is to be downloaded.
 
 2.  Unpack the extension as follows:
 
-    tar xvfz hfw-0.2.2.tar.gz
+    $ tar xvfz hfw-0.2.2.tar.gz
 
 3.  Copy files from within the resulting folder as follows:
 
-    cp highcharts-weewx/bin/user/*.py $BIN_ROOT/user
-    cp -R highcharts-weewx/skins/Highcharts $SKIN_ROOT
+    $ cp highcharts-weewx/bin/user/*.py $BIN_ROOT/user
+    $ cp -R highcharts-weewx/skins/Highcharts $SKIN_ROOT
     
 	replacing the symbolic names $BIN_ROOT and $SKIN_ROOT with the nominal 
     locations for your installation.
 
 4.  Edit weewx.conf:
 
-    vi weewx.conf
+    $ vi weewx.conf
 
 5.  In weewx.conf, modify the [StdReport] section by adding the following 
 sub-section:
@@ -206,16 +214,20 @@ sub-section:
         [[[CheetahGenerator]]]
             HTML_ROOT = public_html/json
 
-6. Start weewx:
+6. Start WeeWX:
 
-    sudo /etc/init.d/weewx start
+    $ sudo /etc/init.d/weewx start
 
 	or
 
-    sudo service weewx start
+    $ sudo service weewx start
 
-This will result in the Highcharts for weewx JSON data files being generated 
+    or
+
+    $ sudo systemctl start weewx
+
+This will result in the Highcharts for WeeWX JSON data files being generated
 during each report generation cycle. A default installation will resulting in 
 the generated JSON data files being placed in the $HTML_ROOT/json directory. 
-The Highcharts for weewx installation can be further customized (eg units of 
-measure, file locations etc) by referring to the Highcharts for weewx wiki.
+The Highcharts for WeeWX installation can be further customized (eg units of
+measure, file locations etc) by referring to the Highcharts for WeeWX wiki.

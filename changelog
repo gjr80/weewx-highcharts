@@ -1,3 +1,5 @@
+v1.0.0
+*   now supports WeeWX v4.0.0 under python 2 or python 3
 v0.2.2
 *   Fixed bug in getDaySummaryVectors() that resulted in year wind direction 
     plot always displaying 90 degrees.
