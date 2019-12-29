@@ -21,7 +21,7 @@ Version: 1.0.0.a1                                  Date: 29 December 2019
 
 Revision History
     29 December 2019    v1.0.0
-        - now support WeeWX 4.0.0 under python 2 and python 3
+        - now supports WeeWX 4.0.0 under python 2 and python 3
     4 September 2018    v0.2.2
         - fixed error in getDaySummaryVectors aggregate calculations due to
           WeeWX archive_day_xxxxx schema change
@@ -32,11 +32,9 @@ Revision History
     22 November 2016    v0.1.0
         - initial implementation
 """
-import logging
 import math
 import weewx
 import weeutil.weeutil
-import syslog
 
 from weewx.units import getStandardUnitType, ValueTuple
 
@@ -49,9 +47,7 @@ def getDaySummaryVectors(db_manager, sql_type, timespan, agg_list='max'):
 
           sql_type:   A statistical type, such as 'outTemp' 'barometer' etc.
 
-          startstamp: The start time of the vector required.
-
-          stopstamp:  The stop time of the vector required.
+          timespan:   Timespan over which the vector is required.
 
           agg_list:   A list of the aggregates required eg ['max', 'min'].
                       Member elements can be any of 'min', 'max', 'mintime',
