@@ -52,7 +52,7 @@ from weeutil.weeutil import TimeSpan, genMonthSpans, startOfInterval, option_as_
 log = logging.getLogger(__name__)
 
 
-def roundNone(value, places):
+def round_none(value, places):
     """Round value to 'places' places but also permit a value of None."""
 
     if value is not None:
@@ -63,7 +63,7 @@ def roundNone(value, places):
     return value
 
 
-def roundInt(value, places):
+def round_int(value, places):
     """Round value to 'places' but return as an integer if places=0."""
 
     if places == 0:
@@ -124,7 +124,7 @@ class highchartsMinRanges(SearchList):
                     try:
                         _group = _getUnitGroup(_key)
                         _value_vt = ValueTuple(float(_value_list[0]), _value_list[1], _group)
-                    except ValueError as KeyError:
+                    except (ValueError, KeyError):
                         continue
                     else:
                         _range = self.generator.converter.convert(_value_vt).value
@@ -225,7 +225,7 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         temp_round = int(self.generator.skin_dict['Units']['StringFormats'].get(outtemp_vt[1], "1f")[-2])
         # do the rounding
-        outtemp_round_vt =  [roundNone(x, temp_round) for x in outtemp_vt[0]]
+        outtemp_round_vt = [round_none(x, temp_round) for x in outtemp_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
         outtemp_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -238,7 +238,7 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         dewpoint_round = int(self.generator.skin_dict['Units']['StringFormats'].get(dewpoint_vt[1], "1f")[-2])
         # do the rounding
-        dewpoint_round_vt = [roundNone(x, dewpoint_round) for x in dewpoint_vt[0]]
+        dewpoint_round_vt = [round_none(x, dewpoint_round) for x in dewpoint_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
         dewpoint_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -249,14 +249,15 @@ class highchartsWeek(SearchList):
         # the vector to None
         if self.apptemp_binding is not None:
             try:
-                (time_start_vt, time_stop_vt, apptemp_vt) = db_lookup(self.apptemp_binding).getSqlVectors(TimeSpan(_start_ts, timespan.stop),
-                                                                                                          'appTemp')
+                _db_mgr = db_lookup(self.apptemp_binding)
+                (time_start_vt, time_stop_vt, apptemp_vt) = _db_mgr.getSqlVectors(TimeSpan(_start_ts, timespan.stop),
+                                                                                  'appTemp')
                 apptemp_vt = self.generator.converter.convert(apptemp_vt)
                 # can't use ValueHelper so round our results manually
                 # get the number of decimal points
                 apptemp_round = int(self.generator.skin_dict['Units']['StringFormats'].get(apptemp_vt[1], "1f")[-2])
                 # do the rounding
-                apptemp_round_vt = [roundNone(x, apptemp_round) for x in apptemp_vt[0]]
+                apptemp_round_vt = [round_none(x, apptemp_round) for x in apptemp_vt[0]]
                 # get our time vector in ms (Highcharts requirement)
                 # need to do it for each getSqlVectors result as they might be different
                 apptemp_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -273,7 +274,7 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         windchill_round = int(self.generator.skin_dict['Units']['StringFormats'].get(windchill_vt[1], "1f")[-2])
         # do the rounding
-        windchill_round_vt = [roundNone(x, windchill_round) for x in windchill_vt[0]]
+        windchill_round_vt = [round_none(x, windchill_round) for x in windchill_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
         windchill_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -286,7 +287,7 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         heatindex_round = int(self.generator.skin_dict['Units']['StringFormats'].get(heatindex_vt[1], "1f")[-2])
         # do the rounding
-        heatindex_round_vt = [roundNone(x, heatindex_round) for x in heatindex_vt[0]]
+        heatindex_round_vt = [round_none(x, heatindex_round) for x in heatindex_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
         heatindex_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -298,7 +299,7 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         outhumidity_round = int(self.generator.skin_dict['Units']['StringFormats'].get(outhumidity_vt[1], "1f")[-2])
         # do the rounding
-        outhumidity_round_vt = [roundNone(x, outhumidity_round) for x in outhumidity_vt[0]]
+        outhumidity_round_vt = [round_none(x, outhumidity_round) for x in outhumidity_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
         outhumidity_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -311,7 +312,7 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         barometer_round = int(self.generator.skin_dict['Units']['StringFormats'].get(barometer_vt[1], "1f")[-2])
         # do the rounding
-        barometer_round_vt = [roundNone(x, barometer_round) for x in barometer_vt[0]]
+        barometer_round_vt = [round_none(x, barometer_round) for x in barometer_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
         barometer_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -324,7 +325,7 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         windspeed_round = int(self.generator.skin_dict['Units']['StringFormats'].get(windspeed_vt[1], "1f")[-2])
         # do the rounding
-        windspeed_round_vt = [roundNone(x, windspeed_round) for x in windspeed_vt[0]]
+        windspeed_round_vt = [round_none(x, windspeed_round) for x in windspeed_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
         windspeed_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -337,7 +338,7 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         windgust_round = int(self.generator.skin_dict['Units']['StringFormats'].get(windgust_vt[1], "1f")[-2])
         # do the rounding
-        windgust_round_vt = [roundNone(x, windgust_round) for x in windgust_vt[0]]
+        windgust_round_vt = [round_none(x, windgust_round) for x in windgust_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
         windgust_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -349,7 +350,7 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         winddir_round = int(self.generator.skin_dict['Units']['StringFormats'].get(windDir_vt[1], "1f")[-2])
         # do the rounding
-        winddir_round_vt = [roundNone(x, winddir_round) for x in windDir_vt[0]]
+        winddir_round_vt = [round_none(x, winddir_round) for x in windDir_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
         winddir_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -370,7 +371,7 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         rain_round = int(self.generator.skin_dict['Units']['StringFormats'].get(rain_vt[1], "1f")[-2])
         # do the rounding
-        rain_round_vt = [roundNone(x, rain_round) for x in rain_vt[0]]
+        rain_round_vt = [round_none(x, rain_round) for x in rain_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
         time_rain_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -382,7 +383,7 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         radiation_round = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_vt[1], "1f")[-2])
         # do the rounding
-        radiation_round_vt = [roundNone(x, radiation_round) for x in radiation_vt[0]]
+        radiation_round_vt = [round_none(x, radiation_round) for x in radiation_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
         radiation_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -393,13 +394,14 @@ class highchartsWeek(SearchList):
         # the vector to None
         if self.insolation_binding is not None:
             try:
-                (time_start_vt, time_stop_vt, insolation_vt) = db_lookup(self.insolation_binding).getSqlVectors(TimeSpan(_start_ts, timespan.stop),
-                                                                                                                'maxSolarRad')
+                _db_mgr = db_lookup(self.insolation_binding)
+                (time_start_vt, time_stop_vt, insolation_vt) = _db_mgr.getSqlVectors(TimeSpan(_start_ts, timespan.stop),
+                                                                                     'maxSolarRad')
                 # can't use ValueHelper so round our results manually
                 # get the number of decimal points
                 insolation_round = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_vt[1], "1f")[-2])
                 # do the rounding
-                insolation_round_vt = [roundNone(x, insolation_round) for x in insolation_vt[0]]
+                insolation_round_vt = [round_none(x, insolation_round) for x in insolation_vt[0]]
                 # get our time vector in ms (Highcharts requirement)
                 # need to do it for each getSqlVectors result as they might be different
                 insolation_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
@@ -414,10 +416,10 @@ class highchartsWeek(SearchList):
         # get the number of decimal points
         uv_round = int(self.generator.skin_dict['Units']['StringFormats'].get(uv_vt[1], "1f")[-2])
         # do the rounding
-        uv_round_vt =  [roundNone(x,uv_round) for x in uv_vt[0]]
+        uv_round_vt = [round_none(x, uv_round) for x in uv_vt[0]]
         # get our time vector in ms (Highcharts requirement)
         # need to do it for each getSqlVectors result as they might be different
-        uv_time_ms =  [float(x) * 1000 for x in time_stop_vt[0]]
+        uv_time_ms = [float(x) * 1000 for x in time_stop_vt[0]]
 
         # format our vectors in json format. Need the zip() to get time/value pairs
         # assumes all vectors have the same number of elements
@@ -650,36 +652,36 @@ class highchartsYear(SearchList):
         time_ms = [float(x) * 1000 for x in outtemp_time_vt[0]]
 
         # round our values from our ValueTuples
-        outtemp_min_round = [roundNone(x, temp_places) for x in outtemp_min_vt[0]]
-        outtemp_max_round = [roundNone(x, temp_places) for x in outtemp_max_vt[0]]
-        outtemp_avg_round = [roundNone(x, temp_places) for x in outtemp_avg_vt[0]]
+        outtemp_min_round = [round_none(x, temp_places) for x in outtemp_min_vt[0]]
+        outtemp_max_round = [round_none(x, temp_places) for x in outtemp_max_vt[0]]
+        outtemp_avg_round = [round_none(x, temp_places) for x in outtemp_avg_vt[0]]
         # round our appTemp values, if we don't have any then set it to None
         try:
-            apptemp_min_round = [roundNone(x, temp_places) for x in apptemp_min_vt[0]]
-            apptemp_max_round = [roundNone(x, temp_places) for x in apptemp_max_vt[0]]
-            apptemp_avg_round = [roundNone(x, temp_places) for x in apptemp_avg_vt[0]]
+            apptemp_min_round = [round_none(x, temp_places) for x in apptemp_min_vt[0]]
+            apptemp_max_round = [round_none(x, temp_places) for x in apptemp_max_vt[0]]
+            apptemp_avg_round = [round_none(x, temp_places) for x in apptemp_avg_vt[0]]
         except TypeError:
             apptemp_min_round = None
             apptemp_max_round = None
             apptemp_avg_round = None
-        windchill_avg_round = [roundNone(x, temp_places) for x in windchill_avg_vt[0]]
-        heatindex_avg_round = [roundNone(x, temp_places) for x in heatindex_avg_vt[0]]
-        outhumidity_min_round = [roundNone(x, outhumidity_places) for x in outhumidity_dict['min'][0]]
-        outhumidity_max_round = [roundNone(x, outhumidity_places) for x in outhumidity_dict['max'][0]]
-        outhumidity_avg_round = [roundNone(x, outhumidity_places) for x in outhumidity_dict['avg'][0]]
-        barometer_min_round = [roundNone(x, temp_places) for x in barometer_min_vt[0]]
-        barometer_max_round = [roundNone(x, temp_places) for x in barometer_max_vt[0]]
-        barometer_avg_round = [roundNone(x, temp_places) for x in barometer_avg_vt[0]]
-        wind_max_round = [roundNone(x, wind_places) for x in wind_max_vt[0]]
-        wind_avg_round = [roundNone(x, wind_places) for x in wind_avg_vt[0]]
-        windspeed_max_round = [roundNone(x, windspeed_places) for x in windspeed_max_vt[0]]
-        windspeed_avg_round = [roundNone(x, windspeed_places) for x in windspeed_avg_vt[0]]
-        winddir_round = [roundNone(x, winddir_places) for x in winddir_dict['vecdir'][0]]
-        rain_sum_round = [roundNone(x, rain_places) for x in rain_sum_vt[0]]
-        radiation_max_round = [roundNone(x, radiation_places) for x in radiation_dict['max'][0]]
-        radiation_avg_round = [roundNone(x, radiation_places) for x in radiation_dict['avg'][0]]
-        uv_max_round = [roundNone(x, uv_places) for x in uv_dict['max'][0]]
-        uv_avg_round = [roundNone(x, uv_places) for x in uv_dict['avg'][0]]
+        windchill_avg_round = [round_none(x, temp_places) for x in windchill_avg_vt[0]]
+        heatindex_avg_round = [round_none(x, temp_places) for x in heatindex_avg_vt[0]]
+        outhumidity_min_round = [round_none(x, outhumidity_places) for x in outhumidity_dict['min'][0]]
+        outhumidity_max_round = [round_none(x, outhumidity_places) for x in outhumidity_dict['max'][0]]
+        outhumidity_avg_round = [round_none(x, outhumidity_places) for x in outhumidity_dict['avg'][0]]
+        barometer_min_round = [round_none(x, barometer_places) for x in barometer_min_vt[0]]
+        barometer_max_round = [round_none(x, barometer_places) for x in barometer_max_vt[0]]
+        barometer_avg_round = [round_none(x, barometer_places) for x in barometer_avg_vt[0]]
+        wind_max_round = [round_none(x, wind_places) for x in wind_max_vt[0]]
+        wind_avg_round = [round_none(x, wind_places) for x in wind_avg_vt[0]]
+        windspeed_max_round = [round_none(x, windspeed_places) for x in windspeed_max_vt[0]]
+        windspeed_avg_round = [round_none(x, windspeed_places) for x in windspeed_avg_vt[0]]
+        winddir_round = [round_none(x, winddir_places) for x in winddir_dict['vecdir'][0]]
+        rain_sum_round = [round_none(x, rain_places) for x in rain_sum_vt[0]]
+        radiation_max_round = [round_none(x, radiation_places) for x in radiation_dict['max'][0]]
+        radiation_avg_round = [round_none(x, radiation_places) for x in radiation_dict['avg'][0]]
+        uv_max_round = [round_none(x, uv_places) for x in uv_dict['max'][0]]
+        uv_avg_round = [round_none(x, uv_places) for x in uv_dict['avg'][0]]
 
         # produce our JSON strings
         outtemp_min_max_json = json.dumps(list(zip(time_ms, outtemp_min_round, outtemp_max_round)))
@@ -880,7 +882,7 @@ class highchartsWindRose(SearchList):
         except:
             self.calm_limit = 0.1
 
-    def calcWindRose(self, timespan, db_lookup, period):
+    def calc_windrose(self, timespan, db_lookup, period):
         """Function to calculate windrose JSON data for a given timespan."""
 
         # initialise a dictionary for our results
@@ -888,14 +890,16 @@ class highchartsWindRose(SearchList):
         if period <= 604800:
             # week or less, get our vectors from archive via getSqlVectors
             # get our wind speed vector
-            (time_vec_speed_start_vt, time_vec_speed_vt, speed_vec_vt) = db_lookup().getSqlVectors(TimeSpan(timespan.stop - period + 1, timespan.stop),
+            t_span = TimeSpan(timespan.stop - period + 1, timespan.stop)
+            (time_vec_speed_start_vt, time_vec_speed_vt, speed_vec_vt) = db_lookup().getSqlVectors(t_span,
                                                                                                    self.source,
                                                                                                    None,
                                                                                                    None)
             # convert it
             speed_vec_vt = self.generator.converter.convert(speed_vec_vt)
             # get our wind direction vector
-            (time_vec_dir_start_vt, time_vec_dir_stop_vt, direction_vec_vt) = db_lookup().getSqlVectors(TimeSpan(timespan.stop-period + 1, timespan.stop),
+            t_span = TimeSpan(timespan.stop-period + 1, timespan.stop)
+            (time_vec_dir_start_vt, time_vec_dir_stop_vt, direction_vec_vt) = db_lookup().getSqlVectors(t_span,
                                                                                                         self.dir,
                                                                                                         None,
                                                                                                         None)
@@ -931,7 +935,7 @@ class highchartsWindRose(SearchList):
         legend_no_labels = ["" for x in range(7)]
         i = 1
         while i < 7:
-            speed_list[i] = self.speedfactor[i]*max_speed_range
+            speed_list[i] = self.speedfactor[i] * max_speed_range
             i += 1
         # setup 2D list for wind direction
         # wind_bin[0][0..self.petals] holds the calm or 0 speed counts for each
@@ -969,7 +973,7 @@ class highchartsWindRose(SearchList):
             else:
                 bin_num = int((direction_vec_vt[0][i]+11.25)/22.5) % self.petals
                 if speed_vec_vt[0][i] <= self.calm_limit:
-                    speed_bin[0] +=1
+                    speed_bin[0] += 1
                 elif speed_vec_vt[0][i] > speed_list[5]:
                     wind_bin[6][bin_num] += 1
                 elif speed_vec_vt[0][i] > speed_list[4]:
@@ -1033,17 +1037,17 @@ class highchartsWindRose(SearchList):
         i = 1
         while i < 7:
             if self.band_percent:
-                legend_labels[i] = str(roundInt(speed_list[i-1], 0)) + "-" + \
-                    str(roundInt(speed_list[i], 0)) + speed_units_str + " (" + \
-                    str(round(speed_bin[i] * pcent_factor, self.precision)) + "%)"
-                legend_no_labels[i] = str(roundInt(speed_list[i-1], 0)) + "-" + \
-                    str(roundInt(speed_list[i], 0)) + " (" + \
-                    str(round(speed_bin[i] * pcent_factor, self.precision)) + "%)"
+                legend_labels[i] = str(round_int(speed_list[i - 1], 0)) + "-" + \
+                                   str(round_int(speed_list[i], 0)) + speed_units_str + " (" + \
+                                   str(round(speed_bin[i] * pcent_factor, self.precision)) + "%)"
+                legend_no_labels[i] = str(round_int(speed_list[i - 1], 0)) + "-" + \
+                                      str(round_int(speed_list[i], 0)) + " (" + \
+                                      str(round(speed_bin[i] * pcent_factor, self.precision)) + "%)"
             else:
-                legend_labels[i] = str(roundInt(speed_list[i-1], 0)) + "-" + \
-                    str(roundInt(speed_list[i], 0)) + speed_units_str
-                legend_no_labels[i] = str(roundInt(speed_list[i-1], 0)) + "-" + \
-                    str(roundInt(speed_list[i], 0))
+                legend_labels[i] = str(round_int(speed_list[i - 1], 0)) + "-" + \
+                                   str(round_int(speed_list[i], 0)) + speed_units_str
+                legend_no_labels[i] = str(round_int(speed_list[i - 1], 0)) + "-" + \
+                                      str(round_int(speed_list[i], 0))
             i += 1
         # build up our JSON result string
         json_result_str = '[{"name": "' + legend_labels[6] + '", "data": ' + \
@@ -1188,7 +1192,7 @@ class highchartsWindRose(SearchList):
                         self.agg_interval = 3600
                 # can now get our windrose data
                 _suffix = str(period) if _period not in ['day', 'week', 'month', 'year', 'all', 'alltime'] else str(_period)
-                sle_dict['wr' + _suffix] = self.calcWindRose(timespan, db_lookup, period)
+                sle_dict['wr' + _suffix] = self.calc_windrose(timespan, db_lookup, period)
 
         t2 = time.time()
         if weewx.debug >= 2:
