@@ -52,7 +52,7 @@ import weewx
 import weewx.cheetahgenerator
 import weewx.units
 import weeutil.weeutil
-from user.highcharts import getDaySummaryVectors
+from user.highcharts import get_day_summary_vectors
 from weewx.units import ValueTuple, getStandardUnitType, convert
 from weeutil.weeutil import TimeSpan, genMonthSpans, startOfInterval, option_as_list
 
@@ -120,7 +120,7 @@ class HighchartsMinRanges(weewx.cheetahgenerator.SearchList):
 
     def __init__(self, generator):
         # initialize my base class:
-        super(HighchartsMinRanges, self).__init__(self, generator)
+        super(HighchartsMinRanges, self).__init__(generator)
 
     def get_extension_list(self, timespan, db_lookup):
         """Obtain y-axis minimum range values as a list of dictionaries.
@@ -174,7 +174,7 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
 
     def __init__(self, generator):
         # initialize my base class:
-        super(HighchartsWeek, self).__init__(self, generator)
+        super(HighchartsWeek, self).__init__(generator)
 
         # Where do we get our maxSolarRad and appTemp data? WeeWX 4.0.0
         # introduced the wview_extended schema which contains fields appTemp
@@ -211,11 +211,16 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
         is the timestamp vector in ms.
         """
 
-        # get our vectors as ValueTuples
-        (t_start_vt, t_stop_vt, obs_vt) = db_manager.getSqlVectors(timespan,
-                                                                   obs_type,
-                                                                   aggregate_type=aggregate_type,
-                                                                   aggregate_interval=aggregate_interval)
+        # get our vectors as ValueTuples, wrap in a try..except in case
+        # obs_type does not exist
+        try:
+            (t_start_vt, t_stop_vt, obs_vt) = db_manager.getSqlVectors(timespan,
+                                                                       obs_type,
+                                                                       aggregate_type=aggregate_type,
+                                                                       aggregate_interval=aggregate_interval)
+        except weewx.UnknownType:
+            logdbg("Unknown type '%s'" % obs_type)
+            return None, None
         # convert our obs ValueTuple
         obs_vt = self.generator.converter.convert(obs_vt)
         # can't use ValueHelper so round our results manually
@@ -248,12 +253,16 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
         stop_struct = time.localtime(timespan.stop)
         utc_offset = (calendar.timegm(stop_struct) - calendar.timegm(time.gmtime(time.mktime(stop_struct))))/60
 
-        # get our start time, seven days ago but aligned with start of day
+        # Our period of interest is a seven day period but starting on a start
+        # of day boundary. Get a TimeSpan object covering this period.
         # first get the start of today
         _ts = weeutil.weeutil.startOfDay(timespan.stop)
-        # then go back seven days
+        # get the start of today as a datetime object so we can do some
+        # daylight saving safe date arithmetic
         _ts_dt = datetime.datetime.fromtimestamp(_ts)
+        # now go back seven days in a daylight saving safe manner
         _start_dt = _ts_dt - datetime.timedelta(days=7)
+        # and convert back to a timestamp
         _start_ts = time.mktime(_start_dt.timetuple())
         # get a TimeSpan object representing the time span of interest
         t_span = TimeSpan(_start_ts, timespan.stop)
@@ -466,7 +475,7 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         _timespan = TimeSpan(_start_ts, timespan.stop)
 
         # get our outTemp vectors
-        (outtemp_time_vt, outtemp_dict) = getDaySummaryVectors(db_lookup(), 'outTemp', _timespan, ['min', 'max', 'avg'])
+        (outtemp_time_vt, outtemp_dict) = get_day_summary_vectors(db_lookup(), 'outTemp', _timespan, ['min', 'max', 'avg'])
         # get our vector ValueTuple out of the dictionary and convert it
         outtemp_min_vt = self.generator.converter.convert(outtemp_dict['min'])
         outtemp_max_vt = self.generator.converter.convert(outtemp_dict['max'])
@@ -478,7 +487,7 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         # to None
         if self.apptemp_binding is not None:
             try:
-                (apptemp_time_vt, apptemp_dict) = getDaySummaryVectors(db_lookup('wd_binding'),
+                (apptemp_time_vt, apptemp_dict) = get_day_summary_vectors(db_lookup('wd_binding'),
                                                                        'appTemp',
                                                                        _timespan,
                                                                        ['min', 'max', 'avg'])
@@ -494,7 +503,7 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
             apptemp_avg_vt = None
 
         # get our windchill vector
-        (windchill_time_vt, windchill_dict) = getDaySummaryVectors(db_lookup(),
+        (windchill_time_vt, windchill_dict) = get_day_summary_vectors(db_lookup(),
                                                                    'windchill',
                                                                    _timespan,
                                                                    ['avg'])
@@ -502,20 +511,20 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         windchill_avg_vt = self.generator.converter.convert(windchill_dict['avg'])
 
         # get our heatindex vector
-        (heatindex_time_vt, heatindex_dict) = getDaySummaryVectors(db_lookup(),
+        (heatindex_time_vt, heatindex_dict) = get_day_summary_vectors(db_lookup(),
                                                                    'heatindex',
                                                                    _timespan,
                                                                    ['avg'])
         # get our vector ValueTuple out of the dictionary and convert it
         heatindex_avg_vt = self.generator.converter.convert(heatindex_dict['avg'])
         # get our humidity vectors
-        (outhumidity_time_vt, outhumidity_dict) = getDaySummaryVectors(db_lookup(),
+        (outhumidity_time_vt, outhumidity_dict) = get_day_summary_vectors(db_lookup(),
                                                                        'outHumidity',
                                                                        _timespan,
                                                                        ['min', 'max', 'avg'])
 
         # get our barometer vectors
-        (barometer_time_vt, barometer_dict) = getDaySummaryVectors(db_lookup(),
+        (barometer_time_vt, barometer_dict) = get_day_summary_vectors(db_lookup(),
                                                                    'barometer',
                                                                    _timespan,
                                                                    ['min', 'max', 'avg'])
@@ -525,7 +534,7 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         barometer_avg_vt = self.generator.converter.convert(barometer_dict['avg'])
 
         # get our wind vectors
-        (wind_time_vt, wind_dict) = getDaySummaryVectors(db_lookup(),
+        (wind_time_vt, wind_dict) = get_day_summary_vectors(db_lookup(),
                                                          'wind',
                                                          _timespan,
                                                          ['max', 'avg'])
@@ -534,7 +543,7 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         wind_avg_vt = self.generator.converter.convert(wind_dict['avg'])
 
         # get our windSpeed vectors
-        (windspeed_time_vt, windspeed_dict) = getDaySummaryVectors(db_lookup(),
+        (windspeed_time_vt, windspeed_dict) = get_day_summary_vectors(db_lookup(),
                                                                    'windSpeed',
                                                                    _timespan,
                                                                    ['min', 'max', 'avg'])
@@ -543,13 +552,13 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         windspeed_avg_vt = self.generator.converter.convert(windspeed_dict['avg'])
 
         # get our windDir vectors
-        (winddir_time_vt, winddir_dict) = getDaySummaryVectors(db_lookup(),
+        (winddir_time_vt, winddir_dict) = get_day_summary_vectors(db_lookup(),
                                                                'wind',
                                                                _timespan,
                                                                ['vecdir'])
 
         # get our rain vectors
-        (rain_time_vt, rain_dict) = getDaySummaryVectors(db_lookup(),
+        (rain_time_vt, rain_dict) = get_day_summary_vectors(db_lookup(),
                                                          'rain',
                                                          _timespan,
                                                          ['sum'])
@@ -557,13 +566,13 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         rain_sum_vt = self.generator.converter.convert(rain_dict['sum'])
 
         # get our radiation vectors
-        (radiation_time_vt, radiation_dict) = getDaySummaryVectors(db_lookup(),
+        (radiation_time_vt, radiation_dict) = get_day_summary_vectors(db_lookup(),
                                                                    'radiation',
                                                                    _timespan,
                                                                    ['min', 'max', 'avg'])
 
         # get our UV vectors
-        (uv_time_vt, uv_dict) = getDaySummaryVectors(db_lookup(),
+        (uv_time_vt, uv_dict) = get_day_summary_vectors(db_lookup(),
                                                      'UV',
                                                      _timespan,
                                                      ['min', 'max', 'avg'])
@@ -836,14 +845,14 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
         else:
             # get our vectors from daily summaries using custom getStatsVectors
             # get our data tuples for speed
-            (time_vec_speed_vt, speed_dict) = getDaySummaryVectors(db_lookup(),
+            (time_vec_speed_vt, speed_dict) = get_day_summary_vectors(db_lookup(),
                                                                    'wind',
                                                                    TimeSpan(timespan.stop - period, timespan.stop),
                                                                    ['avg'])
             # get our vector ValueTuple out of the dictionary and convert it
             speed_vec_vt = self.generator.converter.convert(speed_dict['avg'])
             # get our data tuples for direction
-            (time_vec_dir_vt, dir_dict) = getDaySummaryVectors(db_lookup(),
+            (time_vec_dir_vt, dir_dict) = get_day_summary_vectors(db_lookup(),
                                                                'wind',
                                                                TimeSpan(timespan.stop - period, timespan.stop),
                                                                ['vecdir'])
