@@ -1,53 +1,57 @@
-"""highcharts.py
+"""
+highcharts.py
 
-A function to return a vector of aggregate data based on the daily summaries.
+A function to return a vector of aggregate data from the daily summaries.
 
-Copyright (C) 2016-19 Gary Roderick               gjroderick<at>gmail.com
+Copyright (C) 2016-20 Gary Roderick                 gjroderick<at>gmail.com
 
-This program is free software: you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free
-Software Foundation, either version 3 of the License, or (at your option) any
-later version.
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 3 of the License, or (at your option) any later
+version.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details.
 
-You should have received a copy of the GNU General Public License along with
-this program.  If not, see http://www.gnu.org/licenses/.
-
-
-Version: 1.0.0.a1                                  Date: 29 December 2019
+Version: 0.3.0                                      Date: 10 September 2020
 
 Revision History
-    29 December 2019    v1.0.0
-        - now supports WeeWX 4.0.0 under python 2 and python 3
+    2 February 2020     v0.3.0
+        - WeeWX 4.0 python 2/3 compatible
+        - renamed a few variables/functions
     4 September 2018    v0.2.2
-        - fixed error in getDaySummaryVectors aggregate calculations due to
+        - fixed error in get_day_summary_vectors aggregate calculations due to
           WeeWX archive_day_xxxxx schema change
-    16 May 2017         v0.2.1
+   16 May 2017         v0.2.1
         - no change, version number change only
-    4 May 2017          v0.2.0
+   4 May 2017          v0.2.0
         - no change, version number change only
-    22 November 2016    v0.1.0
+   22 November 2016    v0.1.0
         - initial implementation
 """
+
+# python imports
 import math
+
+# WeeWX imports
 import weewx
 import weeutil.weeutil
 
 from weewx.units import getStandardUnitType, ValueTuple
 
 
-def getDaySummaryVectors(db_manager, sql_type, timespan, agg_list='max'):
-    """ Return a vector of aggregate data from the WeeWX daily summaries.
+def get_day_summary_vectors(db_manager, sql_type, timespan, agg_list='max'):
+    """Return a vector of aggregate data from the WeeWX daily summaries.
 
         Parameters:
           db_manager: A database manager object for the WeeWX archive.
 
           sql_type:   A statistical type, such as 'outTemp' 'barometer' etc.
 
-          timespan:   Timespan over which the vector is required.
+          timespan:   TimeSpan object representing the time span over which the
+                      vector is required.
 
           agg_list:   A list of the aggregates required eg ['max', 'min'].
                       Member elements can be any of 'min', 'max', 'mintime',
@@ -149,8 +153,8 @@ def getDaySummaryVectors(db_manager, sql_type, timespan, agg_list='max'):
     # get unit type and group for time
     (_time_type, _time_group) = weewx.units.getStandardUnitType(std_unit_system, 
                                                                 'dateTime')
-    # loop through each aggregate we were asked for getting unit and group and producing a ValueTuple
-    # and adding to our result dictionary
+    # loop through each aggregate we were asked for getting unit and group and
+    # producing a ValueTuple and adding to our result dictionary
     for agg in agg_list:
         (t, g) = weewx.units.getStandardUnitType(std_unit_system, sql_type, agg)
         _return[agg] = ValueTuple(_vec[agg_list.index(agg)], t, g)
