@@ -817,32 +817,21 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
         # initialize my base class:
         super(highchartsWindRose, self).__init__(self, generator)
 
-        # get a dictionary of ous skin settings
-        self.windrose_dict = self.generator.skin_dict['Extras']['WindRose']
-        # look for plot title, if not defined then set a default
-        try:
-            self.title = self.windrose_dict['title'].strip()
-        except KeyError:
-            self.title = 'Wind Rose'
-        # look for plot source, if not defined then set a default
-        try:
-            self.source = self.windrose_dict['source'].strip()
-        except KeyError:
-            pass
-        if self.source != 'windSpeed' and self.source != 'windGust':
-            self.source = 'windSpeed'
-        if self.source == 'windSpeed':
-            self.dir = 'windDir'
-        else:
+        # get a dictionary of our skin settings
+        windrose_dict = self.generator.skin_dict['Extras']['WindRose']
+        # get plot title, if not specified then use a default
+        self.title = windrose_dict.get('title', 'Wind Rose')
+        # get the plot source, if not defined then use a default
+        self.source = windrose_dict.get('source', 'windSpeed')
+        if self.source == 'windGustDir':
             self.dir = 'windGustDir'
-        # look for aggregate type
-        try:
-            self.agg_type = self.windrose_dict['aggregate_type'].strip().lower()
-            if self.agg_type not in [None, 'avg', 'max', 'min']:
-                self.agg_type = None
-        except KeyError:
-            self.agg_type = None
-        # look for aggregate interval
+        else:
+            self.dir = 'windDir'
+        # get an aggregate type
+        agg_type = windrose_dict.get('aggregate_type')
+        agg_type = agg_type.strip().lower() if agg_type is not None else None
+        agg_type = None if agg_type not in [None, 'avg', 'max', 'min'] else agg_type
+        # get any aggregate interval
         try:
             self.agg_interval = int(self.windrose_dict['aggregate_interval'])
             if self.agg_interval == 0:
