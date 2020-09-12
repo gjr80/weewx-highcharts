@@ -830,10 +830,9 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
         # get an aggregate type
         agg_type = windrose_dict.get('aggregate_type')
         agg_type = agg_type.strip().lower() if agg_type is not None else None
-        agg_type = None if agg_type not in [None, 'avg', 'max', 'min'] else agg_type
+        self.agg_type = agg_type if agg_type in [None, 'avg', 'max', 'min'] else None
         # get any aggregate interval
-        try:
-            self.agg_interval = int(self.windrose_dict['aggregate_interval'])
+        agg_interval = weeutil.weeutil.to_int(windrose_dict.get('aggregate_interval')
             if self.agg_interval == 0:
                 self.agg_interval = None
         except (KeyError, TypeError, ValueError):
