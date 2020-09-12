@@ -10,11 +10,12 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
                      Installer for Highcharts for WeeWX
 
- Version: 1.0.0a1                                       Date: 29 December 2019
+ Version: 0.3.0                                         Date: 10 September 2020
 
  Revision History
-    29 December 2019    v1.0.0
+    10 September 2020   v0.3.0
          - now supports WeeWX 4.0.0 under python 2 or python 3
+         - removed highcharts.py from install file list
     4 September 2018    v0.2.2
         - version number change only
     16 May 2017         v0.2.1
@@ -31,9 +32,9 @@ import weewx
 from distutils.version import StrictVersion
 from setup import ExtensionInstaller
 
-# TODO. Fix before release
-REQUIRED_VERSION = "4.0.0b5"
-HFW_VERSION = "1.0.0"
+# TODO. Check WeeWX version before release
+REQUIRED_VERSION = "3.7.0"
+HFW_VERSION = "0.3.0"
 
 def loader():
     return HfwInstaller()
@@ -167,14 +168,12 @@ class HfwInstaller(ExtensionInstaller):
                     }
                 }
             },
-            files=[('bin/user', ['bin/user/highcharts.py',
-                                 'bin/user/highchartsSearchX.py'
-                                ]
-                   ),
+            files=[('bin/user', ['bin/user/highchartsSearchX.py']
+                    ),
                    ('skins/Highcharts', ['skins/Highcharts/json/week.json.tmpl',
                                          'skins/Highcharts/json/year.json.tmpl',
                                          'skins/Highcharts/skin.conf'
-                                        ]
-                   )
-            ]
+                                         ]
+                    )
+                   ]
         )
