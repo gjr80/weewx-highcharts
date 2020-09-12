@@ -43,7 +43,7 @@ Revision History
 import calendar
 import datetime
 import json
-import logging
+import math
 import time
 from datetime import date
 
@@ -52,7 +52,6 @@ import weewx
 import weewx.cheetahgenerator
 import weewx.units
 import weeutil.weeutil
-from user.highcharts import get_day_summary_vectors
 from weewx.units import ValueTuple, getStandardUnitType, convert
 from weeutil.weeutil import TimeSpan, genMonthSpans, startOfInterval, option_as_list
 
@@ -233,7 +232,6 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
         # return our time and obs data vectors
         return obs_rounded_vector, t_ms_vector
 
-
     def get_extension_list(self, timespan, db_lookup):
         """Generate the JSON vectors and return as a list of dictionaries.
 
@@ -372,22 +370,21 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
         uv_vector, uv_time_vector = self.get_vector(db_lookup(),
                                                     timespan=t_span,
                                                     obs_type='UV')
-        # format our vectors in json format. Need the zip() to get time/value pairs
-        # assumes all vectors have the same number of elements
-        outtemp_json = json.dumps(list(zip(outtemp_time_vector, outtemp_vector))) if outtemp_vector is not None else None
-        dewpoint_json = json.dumps(list(zip(dewpoint_time_vector, dewpoint_vector))) if dewpoint_vector is not None else None
-        apptemp_json = json.dumps(list(zip(apptemp_time_vector, apptemp_vector))) if apptemp_vector is not None else None
-        windchill_json = json.dumps(list(zip(windchill_time_vector, windchill_vector))) if windchill_vector is not None else None
-        heatindex_json = json.dumps(list(zip(heatindex_time_vector, heatindex_vector))) if heatindex_vector is not None else None
-        outhumidity_json = json.dumps(list(zip(outhumidity_time_vector, outhumidity_vector))) if outhumidity_vector is not None else None
-        barometer_json = json.dumps(list(zip(barometer_time_vector, barometer_vector))) if barometer_vector is not None else None
-        windspeed_json = json.dumps(list(zip(windspeed_time_vector, windspeed_vector))) if windspeed_vector is not None else None
-        windgust_json = json.dumps(list(zip(windgust_time_vector, windgust_vector))) if windgust_vector is not None else None
-        winddir_json = json.dumps(list(zip(winddir_time_vector, winddir_vector))) if winddir_vector is not None else None
-        rain_json = json.dumps(list(zip(rain_time_vector, rain_vector))) if rain_vector is not None else None
-        radiation_json = json.dumps(list(zip(radiation_time_vector, radiation_vector))) if radiation_vector is not None else None
-        insolation_json = json.dumps(list(zip(insolation_time_vector, insolation_vector))) if insolation_vector is not None else None
-        uv_json = json.dumps(list(zip(uv_time_vector, uv_vector))) if uv_vector is not None else None
+        # format our vectors in json format
+        outtemp_json = json_zip_vectors([outtemp_vector], outtemp_time_vector)
+        dewpoint_json = json_zip_vectors([dewpoint_vector], dewpoint_time_vector)
+        apptemp_json = json_zip_vectors([apptemp_vector], apptemp_time_vector)
+        windchill_json = json_zip_vectors([windchill_vector], windchill_time_vector)
+        heatindex_json = json_zip_vectors([heatindex_vector], heatindex_time_vector)
+        outhumidity_json = json_zip_vectors([outhumidity_vector], outhumidity_time_vector)
+        barometer_json = json_zip_vectors([barometer_vector], barometer_time_vector)
+        windspeed_json = json_zip_vectors([windspeed_vector], windspeed_time_vector)
+        windgust_json = json_zip_vectors([windgust_vector], windgust_time_vector)
+        winddir_json = json_zip_vectors([winddir_vector], winddir_time_vector)
+        rain_json = json_zip_vectors([rain_vector], rain_time_vector)
+        radiation_json = json_zip_vectors([radiation_vector], radiation_time_vector)
+        insolation_json = json_zip_vectors([insolation_vector], insolation_time_vector)
+        uv_json = json_zip_vectors([uv_vector], uv_time_vector)
 
         # put into a dictionary to return
         search_list_extension = {'outTempWeekjson': outtemp_json,
@@ -421,28 +418,144 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         # initialize my base class:
         super(HighchartsYear, self).__init__(self, generator)
 
-        # Do we have a binding for appTemp? WeeWX-WD can provide (if installed)
-        # or the user can specify in [StdReport][[Highcharts]] or failing this
-        # we will ignore appTemp.
+        # Where do we get our appTemp data? WeeWX 4.0.0 introduced the
+        # wview_extended schema which contains field appTemp but it may or may
+        # not contain data. The default schema for WeeWX 3.x and earlier does
+        # not contain an appTemp field but a user may have added them. In
+        # addition 3rd party extensions such as WeeWX-WD can provide appTemp.
+        # To support obtaining appTemp data from databases other than the
+        # 'WeeWX' database we will support a config option under
+        # [StdReport][[Highcharts]] where the user can specify a binding for
+        # the database that contains appTemp.
 
-        # first try to get the binding from WeeWX-WD if installed
+        # appTemp binding
+        if 'Highcharts' in generator.config_dict['StdReport']:
+            apptemp_binding = generator.config_dict['StdReport']['Highcharts'].get('apptemp_binding')
+            # just in case apptemp_binding is included but not set
+            if apptemp_binding == '':
+                apptemp_binding = None
+        self.apptemp_binding = apptemp_binding
+
+    @staticmethod
+    def get_day_summary_vectors(db_manager, obs_type, timespan, agg_list=['max']):
+        """Return a vector of aggregate data from the WeeWX daily summaries.
+
+            Parameters:
+              db_manager: A database manager object for the WeeWX archive.
+
+              obs_type:   A statistical type, such as 'outTemp' 'barometer' etc.
+
+              timespan:   TimeSpan object representing the time span over which the
+                          vector is required.
+
+              agg_list:   A list of the aggregates required eg ['max', 'min'].
+                          Member elements can be any of 'min', 'max', 'mintime',
+                          'maxtime', 'gustdir', 'sum', 'count', 'avg', 'rms',
+                          'vecavg' or 'vecdir'.
+           """
+
+        # the list of supported aggregates
+        vector_aggs = ['gustdir', 'rms', 'vecavg', 'vecdir']
+        # sql field list for scalar types
+        scalar_fields = 'dateTime,min,mintime,max,maxtime,sum,count,wsum,sumtime'
+        # sql field list for vector types
+        vector_fields = ','.join([scalar_fields,
+                                  'max_dir,xsum,ysum,dirsumtime,squaresum,wsquaresum'])
+        # setup up a list of lists for our vectors
+        _vec = [list() for x in range(len(agg_list))]
+        # initialise each list in the list of lists
+        for agg in agg_list:
+            _vec[agg_list.index(agg)] = list()
+        # setup up our time vector list
+        _time_vec = list()
+        # initialise a dictionary for our results
+        _return = {}
+        # get the unit system in use
+        _row = db_manager.getSql("SELECT usUnits FROM %s LIMIT 1;" % db_manager.table_name)
+        std_unit_system = _row[0] if _row is not None else None
+        # the list of fields we need depend on whether we have a scalar type or a
+        # vector type, which one is it
+        if any(x in vector_aggs for x in agg_list):
+            # it's a vector
+            sql_fields = vector_fields
+        else:
+            # it's a scalar
+            sql_fields = scalar_fields
+        # get our interpolation dictionary for the query
+        inter_dict = {'start': weeutil.weeutil.startOfDay(timespan.start),
+                      'stop': timespan.stop,
+                      'table_name': 'archive_day_%s' % obs_type,
+                      'sql_fields': sql_fields}
+        # get a cursor object for our query
+        _cursor = db_manager.connection.cursor()
         try:
-            self.apptemp_binding = generator.config_dict['Weewx-WD'].get('data_binding')
-        except KeyError:
-            # likely WeeWX-WD is not installed so set to None
-            self.apptemp_binding = None
-        if self.apptemp_binding is None:
-            # try [StdReport][[Highcharts]]
-            try:
-                self.apptemp_binding = generator.config_dict['StdReport']['Highcharts'].get('apptemp_binding')
-                # just in case apptemp_binding is included but not set
-                if self.apptemp_binding == '':
-                    self.apptemp_binding = None
-            except KeyError:
-                # should only occur if the user changed the name of
-                # [[Highcharts]] in [StdReport]
-                self.apptemp_binding = None
+            # put together our SQL query string
+            sql_str = "SELECT %(sql_fields)s FROM %(table_name)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s" % inter_dict
+            # loop through each record our query returns
+            for _rec in _cursor.execute(sql_str):
+                # loop through each aggregate we have been asked for
+                for agg in agg_list:
+                    # Sql query result fields will vary depending on whether the
+                    # underlying obs is a scalar or vector type. At the moment 
+                    # 'wind' is the only vector obs. Fields are as follows:
+                    # scalar: [0]=dateTime    [1]=min        [2]=mintime     [3]=max
+                    #         [4]=maxtime     [5]=sum        [6]=count       [7]=wsum
+                    #         [8]=sumtime
+                    # vector: [0]=dateTime    [1]=min        [2]=mintime     [3]=max
+                    #         [4]=maxtime     [5]=sum        [6]=count       [7]=wsum
+                    #         [8]=sumtime     [9]=max_dir    [10]=xsum       [11]=ysum
+                    #         [12]=dirsumtime [13]=squaresum [14]=wsquaresum
 
+                    # calculate the aggregate
+                    if agg == 'min':
+                        _result = _rec[1]
+                    elif agg == 'max':
+                        _result = _rec[3]
+                    elif agg == 'sum':
+                        _result = _rec[5]
+                    elif agg == 'gustdir':
+                        _result = _rec[9]
+                    elif agg == 'mintime':
+                        _result = int(_rec[2]) if _rec[2] else None
+                    elif agg == 'maxtime':
+                        _result = int(_rec[4]) if _rec[4] else None
+                    elif agg == 'count':
+                        _result = int(_rec[6]) if _rec[6] else None
+                    elif agg == 'avg':
+                        _result = _rec[7] / _rec[8] if _rec[6] else None
+                    elif agg == 'rms':
+                        _result = math.sqrt(_rec[14] / _rec[8]) if _rec[6] else None
+                    elif agg == 'vecavg':
+                        _result = math.sqrt((_rec[10] ** 2 + _rec[11] ** 2) / _rec[8] ** 2) if _rec[6] else None
+                    elif agg == 'vecdir':
+                        if _rec[10] == 0.0 and _rec[11] == 0.0:
+                            _result = None
+                        elif _rec[10] and _rec[11]:
+                            deg = 90.0 - math.degrees(math.atan2(_rec[11], _rec[10]))
+                            _result = deg if deg >= 0.0 else deg + 360.0
+                        else:
+                            _result = None
+                    # if we have not found it then return None
+                    else:
+                        _result = None
+                    # add the aggregate to our vector
+                    _vec[agg_list.index(agg)].append(_result)
+                # add the time to our time vector
+                _time_vec.append(_rec[0])
+        finally:
+            # close our cursor
+            _cursor.close()
+        # get unit type and group for time
+        (_time_type, _time_group) = weewx.units.getStandardUnitType(std_unit_system,
+                                                                    'dateTime')
+        # loop through each aggregate we were asked for getting unit and group and
+        # producing a ValueTuple and adding to our result dictionary
+        for agg in agg_list:
+            (t, g) = weewx.units.getStandardUnitType(std_unit_system, obs_type, agg)
+            _return[agg] = ValueTuple(_vec[agg_list.index(agg)], t, g)
+        # return our time vector and dictionary of aggregate vectors
+        return ValueTuple(_time_vec, _time_type, _time_group), _return
+    
     def get_extension_list(self, timespan, db_lookup):
         """Generate the JSON vectors and return as a list of dictionaries.
 
@@ -472,10 +585,13 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         except ValueError:
             _start_dt = _ts_dt.replace(year=_ts_dt.year-1, day=_ts_dt.day-1)
         _start_ts = time.mktime(_start_dt.timetuple())
-        _timespan = TimeSpan(_start_ts, timespan.stop)
+        t_span = TimeSpan(_start_ts, timespan.stop)
 
         # get our outTemp vectors
-        (outtemp_time_vt, outtemp_dict) = get_day_summary_vectors(db_lookup(), 'outTemp', _timespan, ['min', 'max', 'avg'])
+        (outtemp_time_vt, outtemp_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
+                                                                       obs_type='outTemp', 
+                                                                       timespan=t_span, 
+                                                                       agg_list=['min', 'max', 'avg'])
         # get our vector ValueTuple out of the dictionary and convert it
         outtemp_min_vt = self.generator.converter.convert(outtemp_dict['min'])
         outtemp_max_vt = self.generator.converter.convert(outtemp_dict['max'])
@@ -487,9 +603,9 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         # to None
         if self.apptemp_binding is not None:
             try:
-                (apptemp_time_vt, apptemp_dict) = get_day_summary_vectors(db_lookup('wd_binding'),
+                (apptemp_time_vt, apptemp_dict) = self.get_day_summary_vectors(db_lookup('wd_binding'),
                                                                        'appTemp',
-                                                                       _timespan,
+                                                                       t_span,
                                                                        ['min', 'max', 'avg'])
                 # get our vector ValueTuple out of the dictionary and convert it
                 apptemp_min_vt = self.generator.converter.convert(apptemp_dict['min'])
@@ -501,127 +617,118 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
             apptemp_min_vt = None
             apptemp_max_vt = None
             apptemp_avg_vt = None
-
         # get our windchill vector
-        (windchill_time_vt, windchill_dict) = get_day_summary_vectors(db_lookup(),
-                                                                   'windchill',
-                                                                   _timespan,
-                                                                   ['avg'])
+        (windchill_time_vt, windchill_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
+                                                                           obs_type='windchill', 
+                                                                           timespan=t_span, 
+                                                                           agg_list=['avg'])
         # get our vector ValueTuple out of the dictionary and convert it
         windchill_avg_vt = self.generator.converter.convert(windchill_dict['avg'])
-
         # get our heatindex vector
-        (heatindex_time_vt, heatindex_dict) = get_day_summary_vectors(db_lookup(),
-                                                                   'heatindex',
-                                                                   _timespan,
-                                                                   ['avg'])
+        (heatindex_time_vt, heatindex_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
+                                                                           obs_type='heatindex', 
+                                                                           timespan=t_span, 
+                                                                           agg_list=['avg'])
         # get our vector ValueTuple out of the dictionary and convert it
         heatindex_avg_vt = self.generator.converter.convert(heatindex_dict['avg'])
         # get our humidity vectors
-        (outhumidity_time_vt, outhumidity_dict) = get_day_summary_vectors(db_lookup(),
-                                                                       'outHumidity',
-                                                                       _timespan,
-                                                                       ['min', 'max', 'avg'])
-
+        (outhumidity_time_vt, outhumidity_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
+                                                                           obs_type='outHumidity', 
+                                                                           timespan=t_span, 
+                                                                           agg_list=['min', 'max', 'avg'])
         # get our barometer vectors
-        (barometer_time_vt, barometer_dict) = get_day_summary_vectors(db_lookup(),
-                                                                   'barometer',
-                                                                   _timespan,
-                                                                   ['min', 'max', 'avg'])
+        (barometer_time_vt, barometer_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
+                                                                           obs_type='barometer', 
+                                                                           timespan=t_span, 
+                                                                           agg_list=['min', 'max', 'avg'])
         # get our vector ValueTuple out of the dictionary and convert it
         barometer_min_vt = self.generator.converter.convert(barometer_dict['min'])
         barometer_max_vt = self.generator.converter.convert(barometer_dict['max'])
         barometer_avg_vt = self.generator.converter.convert(barometer_dict['avg'])
-
         # get our wind vectors
-        (wind_time_vt, wind_dict) = get_day_summary_vectors(db_lookup(),
-                                                         'wind',
-                                                         _timespan,
-                                                         ['max', 'avg'])
+        (wind_time_vt, wind_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
+                                                                           obs_type='wind', 
+                                                                           timespan=t_span, 
+                                                                           agg_list=['max', 'avg'])
         # get our vector ValueTuple out of the dictionary and convert it
         wind_max_vt = self.generator.converter.convert(wind_dict['max'])
         wind_avg_vt = self.generator.converter.convert(wind_dict['avg'])
-
         # get our windSpeed vectors
-        (windspeed_time_vt, windspeed_dict) = get_day_summary_vectors(db_lookup(),
-                                                                   'windSpeed',
-                                                                   _timespan,
-                                                                   ['min', 'max', 'avg'])
+        (windspeed_time_vt, windspeed_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
+                                                                           obs_type='windSpeed', 
+                                                                           timespan=t_span, 
+                                                                           agg_list=['max', 'avg'])
         # get our vector ValueTuple out of the dictionary and convert it
         windspeed_max_vt = self.generator.converter.convert(windspeed_dict['max'])
         windspeed_avg_vt = self.generator.converter.convert(windspeed_dict['avg'])
-
         # get our windDir vectors
-        (winddir_time_vt, winddir_dict) = get_day_summary_vectors(db_lookup(),
-                                                               'wind',
-                                                               _timespan,
-                                                               ['vecdir'])
-
+        (winddir_time_vt, winddir_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
+                                                                           obs_type='wind', 
+                                                                           timespan=t_span, 
+                                                                           agg_list=['vecdir'])
         # get our rain vectors
-        (rain_time_vt, rain_dict) = get_day_summary_vectors(db_lookup(),
-                                                         'rain',
-                                                         _timespan,
-                                                         ['sum'])
+        (rain_time_vt, rain_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
+                                                                           obs_type='rain', 
+                                                                           timespan=t_span, 
+                                                                           agg_list=['sum'])
         # get our vector ValueTuple out of the dictionary and convert it
         rain_sum_vt = self.generator.converter.convert(rain_dict['sum'])
-
         # get our radiation vectors
-        (radiation_time_vt, radiation_dict) = get_day_summary_vectors(db_lookup(),
-                                                                   'radiation',
-                                                                   _timespan,
-                                                                   ['min', 'max', 'avg'])
-
+        (radiation_time_vt, radiation_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
+                                                                           obs_type='radiation', 
+                                                                           timespan=t_span, 
+                                                                           agg_list=['min', 'max', 'avg'])
         # get our UV vectors
-        (uv_time_vt, uv_dict) = get_day_summary_vectors(db_lookup(),
-                                                     'UV',
-                                                     _timespan,
-                                                     ['min', 'max', 'avg'])
+        (uv_time_vt, uv_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
+                                                                           obs_type='UV', 
+                                                                           timespan=t_span, 
+                                                                           agg_list=['min', 'max', 'avg'])
 
         # get no of decimal places to use when formatting results
-        temp_places = int(self.generator.skin_dict['Units']['StringFormats'].get(outtemp_min_vt[1], "1f")[-2])
-        outhumidity_places = int(self.generator.skin_dict['Units']['StringFormats'].get(outhumidity_dict['min'][1], "1f")[-2])
-        barometer_places = int(self.generator.skin_dict['Units']['StringFormats'].get(barometer_min_vt[1], "1f")[-2])
-        wind_places = int(self.generator.skin_dict['Units']['StringFormats'].get(wind_max_vt[1], "1f")[-2])
-        windspeed_places = int(self.generator.skin_dict['Units']['StringFormats'].get(windspeed_max_vt[1], "1f")[-2])
-        winddir_places = int(self.generator.skin_dict['Units']['StringFormats'].get(winddir_dict['vecdir'][1], "1f")[-2])
-        rain_places = int(self.generator.skin_dict['Units']['StringFormats'].get(rain_sum_vt[1], "1f")[-2])
-        radiation_places = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_dict['max'][1], "1f")[-2])
-        uv_places = int(self.generator.skin_dict['Units']['StringFormats'].get(uv_dict['max'][1], "1f")[-2])
+        temp_places = int(self.generator.skin_dict['Units']['StringFormats'].get(outtemp_min_vt.unit, "1f")[-2])
+        outhumidity_places = int(self.generator.skin_dict['Units']['StringFormats'].get(outhumidity_dict['min'].unit, "1f")[-2])
+        barometer_places = int(self.generator.skin_dict['Units']['StringFormats'].get(barometer_min_vt.unit, "1f")[-2])
+        wind_places = int(self.generator.skin_dict['Units']['StringFormats'].get(wind_max_vt.unit, "1f")[-2])
+        windspeed_places = int(self.generator.skin_dict['Units']['StringFormats'].get(windspeed_max_vt.unit, "1f")[-2])
+        winddir_places = int(self.generator.skin_dict['Units']['StringFormats'].get(winddir_dict['vecdir'].unit, "1f")[-2])
+        rain_places = int(self.generator.skin_dict['Units']['StringFormats'].get(rain_sum_vt.unit, "1f")[-2])
+        radiation_places = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_dict['max'].unit, "1f")[-2])
+        uv_places = int(self.generator.skin_dict['Units']['StringFormats'].get(uv_dict['max'].unit, "1f")[-2])
 
         # get our time vector in ms
         time_ms = [float(x) * 1000 for x in outtemp_time_vt[0]]
 
         # round our values from our ValueTuples
-        outtemp_min_round = [round_none(x, temp_places) for x in outtemp_min_vt[0]]
-        outtemp_max_round = [round_none(x, temp_places) for x in outtemp_max_vt[0]]
-        outtemp_avg_round = [round_none(x, temp_places) for x in outtemp_avg_vt[0]]
+        outtemp_min_round = [round_none(x, temp_places) for x in outtemp_min_vt.value]
+        outtemp_max_round = [round_none(x, temp_places) for x in outtemp_max_vt.value]
+        outtemp_avg_round = [round_none(x, temp_places) for x in outtemp_avg_vt.value]
         # round our appTemp values, if we don't have any then set it to None
         try:
-            apptemp_min_round = [round_none(x, temp_places) for x in apptemp_min_vt[0]]
-            apptemp_max_round = [round_none(x, temp_places) for x in apptemp_max_vt[0]]
-            apptemp_avg_round = [round_none(x, temp_places) for x in apptemp_avg_vt[0]]
+            apptemp_min_round = [round_none(x, temp_places) for x in apptemp_min_vt.value]
+            apptemp_max_round = [round_none(x, temp_places) for x in apptemp_max_vt.value]
+            apptemp_avg_round = [round_none(x, temp_places) for x in apptemp_avg_vt.value]
         except TypeError:
             apptemp_min_round = None
             apptemp_max_round = None
             apptemp_avg_round = None
-        windchill_avg_round = [round_none(x, temp_places) for x in windchill_avg_vt[0]]
-        heatindex_avg_round = [round_none(x, temp_places) for x in heatindex_avg_vt[0]]
-        outhumidity_min_round = [round_none(x, outhumidity_places) for x in outhumidity_dict['min'][0]]
-        outhumidity_max_round = [round_none(x, outhumidity_places) for x in outhumidity_dict['max'][0]]
-        outhumidity_avg_round = [round_none(x, outhumidity_places) for x in outhumidity_dict['avg'][0]]
-        barometer_min_round = [round_none(x, barometer_places) for x in barometer_min_vt[0]]
-        barometer_max_round = [round_none(x, barometer_places) for x in barometer_max_vt[0]]
-        barometer_avg_round = [round_none(x, barometer_places) for x in barometer_avg_vt[0]]
-        wind_max_round = [round_none(x, wind_places) for x in wind_max_vt[0]]
-        wind_avg_round = [round_none(x, wind_places) for x in wind_avg_vt[0]]
-        windspeed_max_round = [round_none(x, windspeed_places) for x in windspeed_max_vt[0]]
-        windspeed_avg_round = [round_none(x, windspeed_places) for x in windspeed_avg_vt[0]]
-        winddir_round = [round_none(x, winddir_places) for x in winddir_dict['vecdir'][0]]
-        rain_sum_round = [round_none(x, rain_places) for x in rain_sum_vt[0]]
-        radiation_max_round = [round_none(x, radiation_places) for x in radiation_dict['max'][0]]
-        radiation_avg_round = [round_none(x, radiation_places) for x in radiation_dict['avg'][0]]
-        uv_max_round = [round_none(x, uv_places) for x in uv_dict['max'][0]]
-        uv_avg_round = [round_none(x, uv_places) for x in uv_dict['avg'][0]]
+        windchill_avg_round = [round_none(x, temp_places) for x in windchill_avg_vt.value]
+        heatindex_avg_round = [round_none(x, temp_places) for x in heatindex_avg_vt.value]
+        outhumidity_min_round = [round_none(x, outhumidity_places) for x in outhumidity_dict['min'].value]
+        outhumidity_max_round = [round_none(x, outhumidity_places) for x in outhumidity_dict['max'].value]
+        outhumidity_avg_round = [round_none(x, outhumidity_places) for x in outhumidity_dict['avg'].value]
+        barometer_min_round = [round_none(x, barometer_places) for x in barometer_min_vt.value]
+        barometer_max_round = [round_none(x, barometer_places) for x in barometer_max_vt.value]
+        barometer_avg_round = [round_none(x, barometer_places) for x in barometer_avg_vt.value]
+        wind_max_round = [round_none(x, wind_places) for x in wind_max_vt.value]
+        wind_avg_round = [round_none(x, wind_places) for x in wind_avg_vt.value]
+        windspeed_max_round = [round_none(x, windspeed_places) for x in windspeed_max_vt.value]
+        windspeed_avg_round = [round_none(x, windspeed_places) for x in windspeed_avg_vt.value]
+        winddir_round = [round_none(x, winddir_places) for x in winddir_dict['vecdir'].value]
+        rain_sum_round = [round_none(x, rain_places) for x in rain_sum_vt.value]
+        radiation_max_round = [round_none(x, radiation_places) for x in radiation_dict['max'].value]
+        radiation_avg_round = [round_none(x, radiation_places) for x in radiation_dict['avg'].value]
+        uv_max_round = [round_none(x, uv_places) for x in uv_dict['max'].value]
+        uv_avg_round = [round_none(x, uv_places) for x in uv_dict['avg'].value]
 
         # produce our JSON strings
         outtemp_min_max_json = json.dumps(list(zip(time_ms, outtemp_min_round, outtemp_max_round)))
@@ -644,26 +751,26 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
             app_temp_avg_json = json.dumps(list(zip(time_ms, apptemp_avg_round)))
         else:
             app_temp_avg_json = None
-        windchill_avg_json = json.dumps(list(zip(time_ms, windchill_avg_round)))
-        heatindex_avg_json = json.dumps(list(zip(time_ms, heatindex_avg_round)))
-        outhumidity_min_max_json = json.dumps(list(zip(time_ms, outhumidity_min_round, outhumidity_max_round)))
-        outhumidity_min_json = json.dumps(list(zip(time_ms, outhumidity_min_round)))
-        outhumidity_max_json = json.dumps(list(zip(time_ms, outhumidity_max_round)))
-        outhumidity_avg_json = json.dumps(list(zip(time_ms, outhumidity_avg_round)))
-        barometer_min_max_json = json.dumps(list(zip(time_ms, barometer_min_round, barometer_max_round)))
-        barometer_min_json = json.dumps(list(zip(time_ms, barometer_min_round)))
-        barometer_max_json = json.dumps(list(zip(time_ms, barometer_max_round)))
-        barometer_avg_json = json.dumps(list(zip(time_ms, barometer_avg_round)))
-        wind_max_json = json.dumps(list(zip(time_ms, wind_max_round)))
-        wind_avg_json = json.dumps(list(zip(time_ms, wind_avg_round)))
-        windspeed_max_json = json.dumps(list(zip(time_ms, windspeed_max_round)))
-        windspeed_avg_json = json.dumps(list(zip(time_ms, windspeed_avg_round)))
-        winddir_json = json.dumps(list(zip(time_ms, winddir_round)))
-        rain_sum_json = json.dumps(list(zip(time_ms, rain_sum_round)))
-        radiation_max_json = json.dumps(list(zip(time_ms, radiation_max_round)))
-        radiation_avg_json = json.dumps(list(zip(time_ms, radiation_avg_round)))
-        uv_max_json = json.dumps(list(zip(time_ms, uv_max_round)))
-        uv_avg_json = json.dumps(list(zip(time_ms, uv_avg_round)))
+        windchill_avg_json = json_zip_vectors([windchill_avg_round], time_ms)
+        heatindex_avg_json = json_zip_vectors([heatindex_avg_round], time_ms)
+        outhumidity_min_max_json = json_zip_vectors([outhumidity_min_round, outhumidity_max_round], time_ms)
+        outhumidity_min_json = json_zip_vectors([outhumidity_min_round], time_ms)
+        outhumidity_max_json = json_zip_vectors([outhumidity_max_round], time_ms)
+        outhumidity_avg_json = json_zip_vectors([outhumidity_avg_round], time_ms)
+        barometer_min_max_json = json_zip_vectors([barometer_min_round, barometer_max_round], time_ms)
+        barometer_min_json = json_zip_vectors([barometer_min_round], time_ms)
+        barometer_max_json = json_zip_vectors([barometer_max_round], time_ms)
+        barometer_avg_json = json_zip_vectors([barometer_avg_round], time_ms)
+        wind_max_json = json_zip_vectors([wind_max_round], time_ms)
+        wind_avg_json = json_zip_vectors([wind_avg_round], time_ms)
+        windspeed_max_json = json_zip_vectors([windspeed_max_round], time_ms)
+        windspeed_avg_json = json_zip_vectors([windspeed_avg_round], time_ms)
+        winddir_json = json_zip_vectors([winddir_round], time_ms)
+        rain_sum_json = json_zip_vectors([rain_sum_round], time_ms)
+        radiation_max_json = json_zip_vectors([radiation_max_round], time_ms)
+        radiation_avg_json = json_zip_vectors([radiation_avg_round], time_ms)
+        uv_max_json = json_zip_vectors([uv_max_round], time_ms)
+        uv_avg_json = json_zip_vectors([uv_avg_round], time_ms)
 
         # put into a dictionary to return
         search_list_extension = {'outtemp_min_max_json': outtemp_min_max_json,
@@ -693,8 +800,8 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
                                  'uv_max_json': uv_max_json,
                                  'uv_avg_json': uv_avg_json,
                                  'utcOffset': utc_offset,
-                                 'yearPlotStart': _timespan.start * 1000,
-                                 'yearPlotEnd': _timespan.stop * 1000}
+                                 'yearPlotStart': t_span.start * 1000,
+                                 'yearPlotEnd': t_span.stop * 1000}
 
         t2 = time.time()
         if weewx.debug >= 2:
@@ -845,14 +952,14 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
         else:
             # get our vectors from daily summaries using custom getStatsVectors
             # get our data tuples for speed
-            (time_vec_speed_vt, speed_dict) = get_day_summary_vectors(db_lookup(),
+            (time_vec_speed_vt, speed_dict) = self.get_day_summary_vectors(db_lookup(),
                                                                    'wind',
                                                                    TimeSpan(timespan.stop - period, timespan.stop),
                                                                    ['avg'])
             # get our vector ValueTuple out of the dictionary and convert it
             speed_vec_vt = self.generator.converter.convert(speed_dict['avg'])
             # get our data tuples for direction
-            (time_vec_dir_vt, dir_dict) = get_day_summary_vectors(db_lookup(),
+            (time_vec_dir_vt, dir_dict) = self.get_day_summary_vectors(db_lookup(),
                                                                'wind',
                                                                TimeSpan(timespan.stop - period, timespan.stop),
                                                                ['vecdir'])
@@ -1137,3 +1244,26 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
             logdbg("HighchartsWindRose SLE executed in %0.3f seconds" % (t2 - t1))
         # return our json data
         return [sle_dict]
+
+
+# ==============================================================================
+#                             Utility functions
+# ==============================================================================
+
+
+def json_zip_vectors(timestamp_vector, list_of_vectors):
+    """Create a JSON format vector of timestamp, data pairs.
+
+    Take a vector of timestamps and a list of data vectors and return a JSON
+    formatted string of timestamp, data pairs when data can be one or more data
+    points. If the first data vector in list_of_vectors is None return None.
+    """
+
+    if len(list_of_vectors) > 0 and list_of_vectors[0] is not None:
+        # create a list of zipped timestamp, data pairs
+        list_of_tuples = list(zip(timestamp_vector, *list_of_vectors))
+        # return a JSON formatted string of the list of pairs
+        return json.dumps(list_of_tuples)
+    else:
+        # we have no data so return None
+        return None
