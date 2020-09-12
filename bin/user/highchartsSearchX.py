@@ -53,7 +53,7 @@ import weewx.cheetahgenerator
 import weewx.units
 import weeutil.weeutil
 from weewx.units import ValueTuple, getStandardUnitType, convert
-from weeutil.weeutil import TimeSpan, genMonthSpans, startOfInterval, option_as_list
+from weeutil.weeutil import TimeSpan, option_as_list
 
 # import/setup logging, WeeWX v3 is syslog based but WeeWX v4 is logging based,
 # try v4 logging and if it fails use v3 logging
