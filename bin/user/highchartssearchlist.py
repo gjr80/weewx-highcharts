@@ -17,10 +17,10 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see http://www.gnu.org/licenses/.
 
-Version: 0.3.0                                      Date: 10 September 2020
+Version: 0.3.0                                      Date: 13 September 2020
 
 Revision History
-    10 September 2020   v0.3.0
+    13 September 2020   v0.3.0
         - renamed file
         - now WeeWX 4.0.0 python 2/3 compatible
         - refactored get_extension_list() code in each SLE class
