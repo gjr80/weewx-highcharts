@@ -192,6 +192,8 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
             # just in case insolation_binding is included but not set
             if insolation_binding == '':
                 insolation_binding = None
+        else:
+            insolation_binding = None
         self.insolation_binding = insolation_binding
         # appTemp
         if 'Highcharts' in generator.config_dict['StdReport']:
@@ -199,6 +201,8 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
             # just in case apptemp_binding is included but not set
             if apptemp_binding == '':
                 apptemp_binding = None
+        else:
+            apptemp_binding = None
         self.apptemp_binding = apptemp_binding
 
     def get_vector(self, db_manager, timespan, obs_type,
@@ -434,6 +438,8 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
             # just in case apptemp_binding is included but not set
             if apptemp_binding == '':
                 apptemp_binding = None
+        else:
+            apptemp_binding = None
         self.apptemp_binding = apptemp_binding
 
     @staticmethod
@@ -604,9 +610,9 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         if self.apptemp_binding is not None:
             try:
                 (apptemp_time_vt, apptemp_dict) = self.get_day_summary_vectors(db_lookup('wd_binding'),
-                                                                       'appTemp',
-                                                                       t_span,
-                                                                       ['min', 'max', 'avg'])
+                                                                               'appTemp',
+                                                                               t_span,
+                                                                               ['min', 'max', 'avg'])
                 # get our vector ValueTuple out of the dictionary and convert it
                 apptemp_min_vt = self.generator.converter.convert(apptemp_dict['min'])
                 apptemp_max_vt = self.generator.converter.convert(apptemp_dict['max'])
@@ -633,9 +639,9 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         heatindex_avg_vt = self.generator.converter.convert(heatindex_dict['avg'])
         # get our humidity vectors
         (outhumidity_time_vt, outhumidity_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
-                                                                           obs_type='outHumidity', 
-                                                                           timespan=t_span, 
-                                                                           agg_list=['min', 'max', 'avg'])
+                                                                               obs_type='outHumidity',
+                                                                               timespan=t_span,
+                                                                               agg_list=['min', 'max', 'avg'])
         # get our barometer vectors
         (barometer_time_vt, barometer_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
                                                                            obs_type='barometer', 
@@ -647,9 +653,9 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         barometer_avg_vt = self.generator.converter.convert(barometer_dict['avg'])
         # get our wind vectors
         (wind_time_vt, wind_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
-                                                                           obs_type='wind', 
-                                                                           timespan=t_span, 
-                                                                           agg_list=['max', 'avg'])
+                                                                 obs_type='wind',
+                                                                 timespan=t_span,
+                                                                 agg_list=['max', 'avg'])
         # get our vector ValueTuple out of the dictionary and convert it
         wind_max_vt = self.generator.converter.convert(wind_dict['max'])
         wind_avg_vt = self.generator.converter.convert(wind_dict['avg'])
@@ -663,14 +669,14 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         windspeed_avg_vt = self.generator.converter.convert(windspeed_dict['avg'])
         # get our windDir vectors
         (winddir_time_vt, winddir_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
-                                                                           obs_type='wind', 
-                                                                           timespan=t_span, 
-                                                                           agg_list=['vecdir'])
+                                                                       obs_type='wind',
+                                                                       timespan=t_span,
+                                                                       agg_list=['vecdir'])
         # get our rain vectors
         (rain_time_vt, rain_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
-                                                                           obs_type='rain', 
-                                                                           timespan=t_span, 
-                                                                           agg_list=['sum'])
+                                                                 obs_type='rain',
+                                                                 timespan=t_span,
+                                                                 agg_list=['sum'])
         # get our vector ValueTuple out of the dictionary and convert it
         rain_sum_vt = self.generator.converter.convert(rain_dict['sum'])
         # get our radiation vectors
@@ -680,20 +686,29 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
                                                                            agg_list=['min', 'max', 'avg'])
         # get our UV vectors
         (uv_time_vt, uv_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
-                                                                           obs_type='UV', 
-                                                                           timespan=t_span, 
-                                                                           agg_list=['min', 'max', 'avg'])
+                                                             obs_type='UV',
+                                                             timespan=t_span,
+                                                             agg_list=['min', 'max', 'avg'])
 
         # get no of decimal places to use when formatting results
-        temp_places = int(self.generator.skin_dict['Units']['StringFormats'].get(outtemp_min_vt.unit, "1f")[-2])
-        outhumidity_places = int(self.generator.skin_dict['Units']['StringFormats'].get(outhumidity_dict['min'].unit, "1f")[-2])
-        barometer_places = int(self.generator.skin_dict['Units']['StringFormats'].get(barometer_min_vt.unit, "1f")[-2])
-        wind_places = int(self.generator.skin_dict['Units']['StringFormats'].get(wind_max_vt.unit, "1f")[-2])
-        windspeed_places = int(self.generator.skin_dict['Units']['StringFormats'].get(windspeed_max_vt.unit, "1f")[-2])
-        winddir_places = int(self.generator.skin_dict['Units']['StringFormats'].get(winddir_dict['vecdir'].unit, "1f")[-2])
-        rain_places = int(self.generator.skin_dict['Units']['StringFormats'].get(rain_sum_vt.unit, "1f")[-2])
-        radiation_places = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_dict['max'].unit, "1f")[-2])
-        uv_places = int(self.generator.skin_dict['Units']['StringFormats'].get(uv_dict['max'].unit, "1f")[-2])
+        temp_places = int(self.generator.skin_dict['Units']['StringFormats'].get(outtemp_min_vt.unit,
+                                                                                 "1f")[-2])
+        outhumidity_places = int(self.generator.skin_dict['Units']['StringFormats'].get(outhumidity_dict['min'].unit,
+                                                                                        "1f")[-2])
+        barometer_places = int(self.generator.skin_dict['Units']['StringFormats'].get(barometer_min_vt.unit,
+                                                                                      "1f")[-2])
+        wind_places = int(self.generator.skin_dict['Units']['StringFormats'].get(wind_max_vt.unit,
+                                                                                 "1f")[-2])
+        windspeed_places = int(self.generator.skin_dict['Units']['StringFormats'].get(windspeed_max_vt.unit,
+                                                                                      "1f")[-2])
+        winddir_places = int(self.generator.skin_dict['Units']['StringFormats'].get(winddir_dict['vecdir'].unit,
+                                                                                    "1f")[-2])
+        rain_places = int(self.generator.skin_dict['Units']['StringFormats'].get(rain_sum_vt.unit,
+                                                                                 "1f")[-2])
+        radiation_places = int(self.generator.skin_dict['Units']['StringFormats'].get(radiation_dict['max'].unit,
+                                                                                      "1f")[-2])
+        uv_places = int(self.generator.skin_dict['Units']['StringFormats'].get(uv_dict['max'].unit,
+                                                                               "1f")[-2])
 
         # get our time vector in ms
         time_ms = [float(x) * 1000 for x in outtemp_time_vt[0]]
@@ -810,12 +825,27 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         return [search_list_extension]
 
 
-class highchartsWindRose(weewx.cheetahgenerator.SearchList):
+class HighchartsWindRose(weewx.cheetahgenerator.SearchList):
     """SearchList to generate JSON vectors for Highcharts windrose plots."""
+
+    default_speedfactor = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0]
+    default_petal_colours = ['lightblue', 'blue', 'midnightblue', 'forestgreen',
+                             'limegreen', 'green', 'greenyellow'
+                             ]
+    default_petals = 8
+    dir_lookup = {16: ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+                       'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
+                       ],
+                  8: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+                  4: ['N', 'E', 'S', 'W']
+                  }
+    default_bullseye_size = 3
+    default_precision = 1
+    default_calm_limit = 0.1
 
     def __init__(self, generator):
         # initialize my base class:
-        super(highchartsWindRose, self).__init__(self, generator)
+        super(HighchartsWindRose, self).__init__(self, generator)
 
         # get a dictionary of our skin settings
         windrose_dict = self.generator.skin_dict['Extras']['WindRose']
@@ -832,89 +862,51 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
         agg_type = agg_type.strip().lower() if agg_type is not None else None
         self.agg_type = agg_type if agg_type in [None, 'avg', 'max', 'min'] else None
         # get any aggregate interval
-        agg_interval = weeutil.weeutil.to_int(windrose_dict.get('aggregate_interval')
-            if self.agg_interval == 0:
-                self.agg_interval = None
-        except (KeyError, TypeError, ValueError):
-            self.agg_interval = None
-        # look for speed band boundaries, if not defined then set some defaults
-        try:
-            self.speedfactor = self.windrose_dict['speedfactor']
-        except KeyError:
-            self.speedfactor = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0]
-        if len(self.speedfactor) != 7 or max(self.speedfactor) > 1.0 or min(self.speedfactor) < 0.0:
-            self.speedfactor = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0]
-        # look for petal colours, if not defined then set some defaults
-        try:
-            self.petal_colours = self.windrose_dict['petal_colors']
-        except KeyError:
-            self.petal_colours = ['lightblue', 'blue', 'midnightblue',
-                                  'forestgreen', 'limegreen', 'green',
-                                  'greenyellow']
-        if len(self.petal_colours) != 7:
-            self.petal_colours = ['lightblue', 'blue', 'midnightblue',
-                                  'forestgreen', 'limegreen', 'green',
-                                  'greenyellow']
-        for x in range(len(self.petal_colours)-1):
-            if self.petal_colours[x][0:2] == '0x':
-                self.petal_colours[x] = '#' + self.petal_colours[x][2:]
-        # look for number of petals, if not defined then set a default
-        try:
-            self.petals = int(self.windrose_dict['petals'])
-        except KeyError:
-            self.petals = 8
-        if self.petals is None or self.petals == 0:
-            self.petals = 8
+        agg_interval = weeutil.weeutil.to_int(windrose_dict.get('aggregate_interval',
+                                                                0))
+        self.agg_interval = agg_interval if agg_interval > 0 else None
+        # get speed band boundaries, if not defined then set some defaults
+        speedfactor = windrose_dict.get('speedfactor', self.default_speedfactor)
+        if len(speedfactor) != 7 or max(speedfactor) > 1.0 or min(speedfactor) < 0.0:
+            speedfactor = self.default_speedfactor
+        self.speedfactor = speedfactor
+        # get petal colours, if not defined then set some defaults
+        petal_colours = windrose_dict.get('petal_colors',
+                                          self.default_petal_colours)
+        petal_colours = self.default_petal_colours if len(petal_colours) != 7 else petal_colours
+        for x in range(len(petal_colours) - 1):
+            if petal_colours[x][0:2] == '0x':
+                petal_colours[x] = '#' + petal_colours[x][2:]
+        self.petal_colours = petal_colours
+        # get the number of petals, if not defined then set a default
+        petals = weeutil.weeutil.to_int(windrose_dict.get('petals',
+                                                          self.default_petals))
+        petals = self.default_petals if petals is None or petals == 0 else petals
+        self.petals = petals
         # set our list of direction based on number of petals
-        if self.petals == 16:
-            self.directions = ['N', 'NNE', 'NE', 'ENE',
-                               'E', 'ESE', 'SE', 'SSE',
-                               'S', 'SSW', 'SW', 'WSW',
-                               'W', 'WNW', 'NW', 'NNW']
-        elif self.petals == 8:
-            self.directions = ['N', 'NE', 'E', 'SE',
-                               'S', 'SW', 'W', 'NW']
-        elif self.petals == 4:
-            self.directions = ['N', 'E', 'S', 'W']
-        # look for legend title, if not defined then set True
-        try:
-            self.legend_title = self.windrose_dict['legend_title'].strip().lower() == 'true'
-        except KeyError:
-            self.legend_title = True
-        # look for band percent, if not defined then set True
-        try:
-            self.band_percent = self.windrose_dict['band_percent'].strip().lower() == 'true'
-        except KeyError:
-            self.band_percent = True
-        # look for % precision, if not defined then set a default
-        try:
-            self.precision = int(self.windrose_dict['precision'])
-        except KeyError:
-            self.precision = 1
-        if self.precision is None:
-            self.precision = 1
-        # look for bullseye diameter, if not defined then set a default
-        try:
-            self.bullseye_size = int(self.windrose_dict['bullseye_size'])
-        except KeyError:
-            self.bullseye_size = 3
-        if self.bullseye_size is None:
-            self.bullseye_size = 3
-        # look for bullseye colour, if not defined then set some defaults
-        try:
-            self.bullseye_colour = self.windrose_dict['bullseye_color']
-        except KeyError:
-            self.bullseye_colour = 'white'
-        if self.bullseye_colour is None:
-            self.bullseye_colour = 'white'
-        if self.bullseye_colour[0:2] == '0x':
-            self.bullseye_colour = '#' + self.bullseye_colour[2:]
-        # look for 'calm' upper limit ie the speed below which we consider aggregate
-        # wind speeds to be 'calm' (or 0)
-        try:
-            self.calm_limit = float(self.windrose_dict['calm_limit'])
-        except:
-            self.calm_limit = 0.1
+        self.directions = self.dir_lookup.get(self.petals, self.dir_lookup[16])
+        # get legend title, if not defined then set True
+        self.show_legend_title = weeutil.weeutil.to_bool(windrose_dict.get('show_legend_title',
+                                                                           True))
+        # get band percent, if not defined then set True
+        self.show_band_percent = weeutil.weeutil.to_bool(windrose_dict.get('show_band_percent',
+                                                         True))
+        # get % precision, if not defined then set a default
+        self.precision = weeutil.weeutil.to_int(windrose_dict.get('precision',
+                                                                  self.default_precision))
+        # get bullseye diameter, if not defined then set a default
+        self.bullseye_size = weeutil.weeutil.to_int(windrose_dict.get('bullseye_size',
+                                                                      self.default_bullseye_size))
+        # get bullseye colour, if not defined then set some defaults
+        b_colour = windrose_dict.get('bullseye_color', 'white')
+        b_colour = ''.join(['#', b_colour[2:]]) if b_colour[0:2] == '0x' else b_colour
+        self.bullseye_colour = b_colour
+        # get the 'calm' upper limit ie the speed below which we consider
+        # aggregate wind speeds to be 'calm' (or 0)
+        self.calm_limit = float(windrose_dict.get('calm_limit',
+                                                  self.default_calm_limit))
+        # and finally save our config dict
+        self.windrose_dict = windrose_dict
 
     def calc_windrose(self, timespan, db_lookup, period):
         """Function to calculate windrose JSON data for a given timespan."""
@@ -925,39 +917,37 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
             # week or less, get our vectors from archive via getSqlVectors
             # get our wind speed vector
             t_span = TimeSpan(timespan.stop - period + 1, timespan.stop)
-            (time_vec_speed_start_vt, time_vec_speed_vt, speed_vec_vt) = db_lookup().getSqlVectors(t_span,
-                                                                                                   self.source,
-                                                                                                   None,
-                                                                                                   None)
-            # convert it
+            (_x_vt, time_vec_speed_vt, speed_vec_vt) = db_lookup().getSqlVectors(t_span,
+                                                                                 self.source)
+            # convert our speed vector
             speed_vec_vt = self.generator.converter.convert(speed_vec_vt)
             # get our wind direction vector
             t_span = TimeSpan(timespan.stop-period + 1, timespan.stop)
-            (time_vec_dir_start_vt, time_vec_dir_stop_vt, direction_vec_vt) = db_lookup().getSqlVectors(t_span,
-                                                                                                        self.dir,
-                                                                                                        None,
-                                                                                                        None)
+            (_x_vt, time_vec_dir_stop_vt, direction_vec_vt) = db_lookup().getSqlVectors(t_span,
+                                                                                        self.dir)
         else:
             # get our vectors from daily summaries using custom getStatsVectors
             # get our data tuples for speed
+            t_span = TimeSpan(timespan.stop - period, timespan.stop)
             (time_vec_speed_vt, speed_dict) = self.get_day_summary_vectors(db_lookup(),
-                                                                   'wind',
-                                                                   TimeSpan(timespan.stop - period, timespan.stop),
-                                                                   ['avg'])
-            # get our vector ValueTuple out of the dictionary and convert it
+                                                                           'wind',
+                                                                           t_span,
+                                                                           ['avg'])
+            # get our speed vector ValueTuple out of the dictionary and convert
+            # it
             speed_vec_vt = self.generator.converter.convert(speed_dict['avg'])
             # get our data tuples for direction
             (time_vec_dir_vt, dir_dict) = self.get_day_summary_vectors(db_lookup(),
-                                                               'wind',
-                                                               TimeSpan(timespan.stop - period, timespan.stop),
-                                                               ['vecdir'])
+                                                                       'wind',
+                                                                       t_span,
+                                                                       ['vecdir'])
             # get our vector ValueTuple out of the dictionary, no need to convert
             direction_vec_vt = dir_dict['vecdir']
         # get a string with our speed units
-        speed_units_str = self.generator.skin_dict['Units']['Labels'].get(speed_vec_vt[1]).strip()
+        speed_units_str = self.generator.skin_dict['Units']['Labels'].get(speed_vec_vt.unit).strip()
         # to get a better display we will set our upper speed to a multiple of 10
         # find maximum speed from our data
-        max_speed = max(speed_vec_vt[0])
+        max_speed = max(speed_vec_vt.value)
         # set upper speed range for our plot
         max_speed_range = (int(max_speed/10.0) + 1) * 10
         # setup a list to hold the cutoff speeds for our stacked columns on our
@@ -992,7 +982,7 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
         # [7] = >5th speed and <6th speed
         speed_bin = [0 for x in range(7)]
         # how many obs do we have?
-        samples = len(time_vec_speed_vt[0])
+        samples = len(time_vec_speed_vt.value)
         # calc factor to be applied to convert counts to %
         pcent_factor = 100.0/samples
         # Loop through each sample and increment direction counts
@@ -1002,23 +992,23 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
         # 'bullseye' on the plot
         i = 0
         while i < samples:
-            if (speed_vec_vt[0][i] is None) or (direction_vec_vt[0][i] is None):
+            if (speed_vec_vt.value[i] is None) or (direction_vec_vt.value[i] is None):
                 speed_bin[0] += 1
             else:
-                bin_num = int((direction_vec_vt[0][i]+11.25)/22.5) % self.petals
-                if speed_vec_vt[0][i] <= self.calm_limit:
+                bin_num = int((direction_vec_vt.value[i]+11.25)/22.5) % self.petals
+                if speed_vec_vt.value[i] <= self.calm_limit:
                     speed_bin[0] += 1
-                elif speed_vec_vt[0][i] > speed_list[5]:
+                elif speed_vec_vt.value[i] > speed_list[5]:
                     wind_bin[6][bin_num] += 1
-                elif speed_vec_vt[0][i] > speed_list[4]:
+                elif speed_vec_vt.value[i] > speed_list[4]:
                     wind_bin[5][bin_num] += 1
-                elif speed_vec_vt[0][i] > speed_list[3]:
+                elif speed_vec_vt.value[i] > speed_list[3]:
                     wind_bin[4][bin_num] += 1
-                elif speed_vec_vt[0][i] > speed_list[2]:
+                elif speed_vec_vt.value[i] > speed_list[2]:
                     wind_bin[3][bin_num] += 1
-                elif speed_vec_vt[0][i] > speed_list[1]:
+                elif speed_vec_vt.value[i] > speed_list[1]:
                     wind_bin[2][bin_num] += 1
-                elif speed_vec_vt[0][i] > 0:
+                elif speed_vec_vt.value[i] > 0:
                     wind_bin[1][bin_num] += 1
                 else:
                     wind_bin[0][bin_num] += 1
@@ -1061,46 +1051,58 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
             j += 1
         # Determine our legend labels. Need to determine actual speed band
         # ranges, add unit and if necessary add % for that band
-        calm_percent_str = str(round(speed_bin[0] * pcent_factor, self.precision)) + "%"
-        if self.band_percent:
-            legend_labels[0] = "Calm (" + calm_percent_str + ")"
-            legend_no_labels[0] = "Calm (" + calm_percent_str + ")"
+        calm_percent_str = ''.join([str(round(speed_bin[0] * pcent_factor, self.precision)),
+                                    "%"])
+        if self.show_band_percent:
+            legend_labels[0] = ''.join(["Calm (", calm_percent_str, ")"])
+            legend_no_labels[0] = ''.join(["Calm (", calm_percent_str, ")"])
         else:
             legend_labels[0] = "Calm"
             legend_no_labels[0] = "Calm"
         i = 1
         while i < 7:
-            if self.band_percent:
-                legend_labels[i] = str(round_int(speed_list[i - 1], 0)) + "-" + \
-                                   str(round_int(speed_list[i], 0)) + speed_units_str + " (" + \
-                                   str(round(speed_bin[i] * pcent_factor, self.precision)) + "%)"
-                legend_no_labels[i] = str(round_int(speed_list[i - 1], 0)) + "-" + \
-                                      str(round_int(speed_list[i], 0)) + " (" + \
-                                      str(round(speed_bin[i] * pcent_factor, self.precision)) + "%)"
+            if self.show_band_percent:
+                legend_labels[i] = ''.join([str(round_int(speed_list[i - 1], 0)),
+                                            "-", str(round_int(speed_list[i], 0)),
+                                            speed_units_str, " (",
+                                            str(round(speed_bin[i] * pcent_factor, self.precision)),
+                                            "%)"])
+                legend_no_labels[i] = ''.join([str(round_int(speed_list[i - 1], 0)),
+                                               "-", str(round_int(speed_list[i], 0)),
+                                               " (",
+                                               str(round(speed_bin[i] * pcent_factor, self.precision)),
+                                               "%)"])
             else:
-                legend_labels[i] = str(round_int(speed_list[i - 1], 0)) + "-" + \
-                                   str(round_int(speed_list[i], 0)) + speed_units_str
-                legend_no_labels[i] = str(round_int(speed_list[i - 1], 0)) + "-" + \
-                                      str(round_int(speed_list[i], 0))
+                legend_labels[i] = ''.join([str(round_int(speed_list[i - 1], 0)),
+                                            "-", str(round_int(speed_list[i], 0)),
+                                            speed_units_str])
+                legend_no_labels[i] = ''.join([str(round_int(speed_list[i - 1], 0)),
+                                               "-", str(round_int(speed_list[i], 0))])
             i += 1
         # build up our JSON result string
-        json_result_str = '[{"name": "' + legend_labels[6] + '", "data": ' + \
-            json.dumps(wind_bin[6]) + '}'
-        json_result_no_label_str = '[{"name": "' + legend_no_labels[6] + \
-            '", "data": ' + json.dumps(wind_bin[6]) + '}'
+        json_result_str = ''.join(['[{"name": "', legend_labels[6],
+                                   '", "data": ', json.dumps(wind_bin[6]),
+                                   '}'])
+        json_result_no_label_str = ''.join(['[{"name": "', legend_no_labels[6],
+                                            '", "data": ', json.dumps(wind_bin[6]),
+                                            '}'])
         i = 5
         while i > 0:
-            json_result_str += ', {"name": "' + legend_labels[i] + '", "data": ' + \
-                json.dumps(wind_bin[i]) + '}'
-            json_result_no_label_str += ', {"name": "' + legend_no_labels[i] + \
-                '", "data": ' + json.dumps(wind_bin[i]) + '}'
+            json_result_str = ''.join([json_result_str, ', {"name": "',
+                                       legend_labels[i], '", "data": ',
+                                       json.dumps(wind_bin[i]), '}'])
+            json_result_no_label_str = ''.join([json_result_no_label_str,
+                                                ', {"name": "',
+                                                legend_no_labels[i],
+                                                '", "data": ',
+                                                json.dumps(wind_bin[i]), '}'])
             i -= 1
         # add ] to close our json array
-        json_result_str += ']'
+        json_result_str = ''.join([json_result_str, ']'])
 
         # fill our results dictionary
         wr_dict['windrosejson'] = json_result_str
-        json_result_no_label_str += ']'
+        json_result_no_label_str = ''.join([json_result_no_label_str, ']'])
         wr_dict['windrosenolabeljson'] = json_result_no_label_str
         # Get our xAxis categories in json format
         wr_dict['xAxisCategoriesjson'] = json.dumps(self.directions)
@@ -1109,16 +1111,20 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
         # Get our stacked column colours in json format
         wr_dict['coloursjson'] = json.dumps(self.petal_colours)
         # Manually construct our plot title in json format
-        wr_dict['titlejson'] = "[\"" + self.title + "\"]"
+        wr_dict['titlejson'] = ''.join(["[\"", self.title, "\"]"])
         # Manually construct our legend title in json format
         # Set to null if not required
-        if self.legend_title:
+        if self.show_legend_title:
             if self.source == 'windSpeed':
                 legend_title_json = "[\"Wind Speed\"]"
-                legend_title_no_label_json = "[\"Wind Speed<br>(" + speed_units_str + ")\"]"
+                legend_title_no_label_json = ''.join(["[\"Wind Speed<br>(",
+                                                      speed_units_str,
+                                                      ")\"]"])
             else:
                 legend_title_json = "[\"Wind Gust\"]"
-                legend_title_no_label_json = "[\"Wind Gust<br>(" + speed_units_str + ")\"]"
+                legend_title_no_label_json = ''.join(["[\"Wind Gust<br>(",
+                                                      speed_units_str,
+                                                      ")\"]"])
         else:
             legend_title_json = "[null]"
             legend_title_no_label_json = "[null]"
@@ -1127,7 +1133,6 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
         wr_dict['bullseyejson'] = '{"radius": %f, "color": "%s", "text": "%s"}' % (bullseye_radius,
                                                                                    self.bullseye_colour,
                                                                                    calm_percent_str)
-
         return wr_dict
 
     def get_extension_list(self, timespan, db_lookup):
@@ -1146,11 +1151,7 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
         t1 = time.time()
 
         # look for plot period, if not defined then set a default
-        try:
-            _period_list = option_as_list(self.windrose_dict['period'])
-        except (KeyError, TypeError):
-            # 24 hours
-            _period_list = ['day']
+        _period_list = option_as_list(self.windrose_dict.get('period', ['day']))
         if _period_list is None:
             return None
         elif hasattr(_period_list, '__iter__') and len(_period_list) > 0:
@@ -1204,7 +1205,7 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
                 else:
                     try:
                         period = int(_period)
-                    except:
+                    except (ValueError, TypeError):
                         # default to 1 day but it could be a daylight savings
                         # changeover day
                         # first get our stop time as a dt object so we can do some
@@ -1225,8 +1226,10 @@ class highchartsWindRose(weewx.cheetahgenerator.SearchList):
                     if self.agg_interval is None:
                         self.agg_interval = 3600
                 # can now get our windrose data
-                _suffix = str(period) if _period not in ['day', 'week', 'month', 'year', 'all', 'alltime'] else str(_period)
-                sle_dict['wr' + _suffix] = self.calc_windrose(timespan, db_lookup, period)
+                _suffix = str(_period) if _period in ['day', 'week', 'month', 'year', 'all', 'alltime'] else str(period)
+                sle_dict[''.join(['wr', _suffix])] = self.calc_windrose(timespan,
+                                                                        db_lookup,
+                                                                        period)
         t2 = time.time()
         if weewx.debug >= 2:
             logdbg("HighchartsWindRose SLE executed in %0.3f seconds" % (t2 - t1))
