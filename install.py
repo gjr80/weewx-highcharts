@@ -10,12 +10,13 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
                      Installer for Highcharts for WeeWX
 
- Version: 0.3.0                                         Date: 10 September 2020
+ Version: 0.3.0                                         Date: 20 September 2020
 
  Revision History
-    10 September 2020   v0.3.0
+    20 September 2020   v0.3.0
          - now supports WeeWX 4.0.0 under python 2 or python 3
          - removed highcharts.py from install file list
+         - renamed highchartsSearchX.py to highchartssearchlist.py
     4 September 2018    v0.2.2
         - version number change only
     16 May 2017         v0.2.1
@@ -32,8 +33,7 @@ import weewx
 from distutils.version import StrictVersion
 from setup import ExtensionInstaller
 
-# TODO. Check WeeWX version before release
-REQUIRED_VERSION = "3.7.0"
+REQUIRED_VERSION = "3.4.0"
 HFW_VERSION = "0.3.0"
 
 def loader():
@@ -156,8 +156,8 @@ class HfwInstaller(ExtensionInstaller):
                                 'petals': '16',
                                 'petal_colors': ['aqua', '0x0099FF', '0x0033FF', '0x009900', '0x00CC00', '0x33FF33', '0xCCFF00'],
                                 'speedfactor': ['0.0', '0.1', '0.2', '0.3', '0.5', '0.7', '1.0'],
-                                'legend_title': 'True',
-                                'band_percent': 'True',
+                                'show_legend_title': 'True',
+                                'show_band_percent': 'True',
                                 'bullseye_percent': 'True',
                                 'precision': '1',
                                 'bullseye_size': '20',
@@ -168,7 +168,7 @@ class HfwInstaller(ExtensionInstaller):
                     }
                 }
             },
-            files=[('bin/user', ['bin/user/highchartsSearchX.py']
+            files=[('bin/user', ['bin/user/highchartssearchlist.py']
                     ),
                    ('skins/Highcharts', ['skins/Highcharts/json/week.json.tmpl',
                                          'skins/Highcharts/json/year.json.tmpl',

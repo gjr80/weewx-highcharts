@@ -19,13 +19,19 @@ Note:   Symbolic names are used below to refer to some file location on the
 WeeWX system. These symbolic names allow a common name to be used to refer to
 a directory that may be different from system to system. The following symbolic 
 names are used below:
--   $DOWNLOAD_ROOT. The path to the directory containing the downloaded 
-    Highcharts for WeeWX extension.
+
+-   $BIN_ROOT. The path to the directory where WeeWX executables are located.
+    This directory is dependent on whether WeeWX was installed as a package or
+    via setup.py. Refer to 'where to find things' in the WeeWX User's Guide:
+    http://weewx.com/docs/usersguide.htm#Where_to_find_things for further
+    information.
+
 -   $HTML_ROOT. The path to the directory where WeeWX generated reports are
     saved. This directory is normally set in the [StdReport] section of 
     weewx.conf. Refer to 'where to find things' in the WeeWX User's Guide:
     http://weewx.com/docs/usersguide.htm#Where_to_find_things for further 
     information.
+
 -   $SKIN_ROOT. The path to the directory where WeeWX skin folders are located
     This directory is normally set in the [StdReport] section of 
     weewx.conf. Refer to 'where to find things' in the WeeWX User's Guide:
@@ -36,47 +42,35 @@ names are used below:
 WeeWX releases page (https://github.com/gjr80/weewx-highcharts/releases) into
 a directory accessible from the WeeWX machine.
 
-    $ wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v1.0.0/hfw-1.0.0.tar.gz
+    $ wget -P /var/tmp https://github.com/gjr80/weewx-highcharts/releases/download/v0.3.0/hfw-0.3.0.tar.gz
 
-	where $DOWNLOAD_ROOT is the path to the directory where the Highcharts for 
-    WeeWX extension is to be downloaded.
-
-2.  Stop WeeWX:
-
-    $ sudo /etc/init.d/weewx stop
-
-	or
-
-    $ sudo service weewx stop
-
-    or
-
-    $ sudo systemctl stop weewx
-
-3.  Install the Highcharts for WeeWX extension downloaded at step 1 using the
+2.  Install the Highcharts for WeeWX extension downloaded at step 1 using the
 *wee_extension* utility:
 
-    $ wee_extension --install=$DOWNLOAD_ROOT/hfw-1.0.0.tar.gz
+    $ wee_extension --install=$DOWNLOAD_ROOT/hfw-0.3.0.tar.gz
+
+    Note: Depending on your system/installation the above command may need to
+          be prefixed with sudo.
 
     This will result in output similar to the following:
 
-        Request to install '/var/tmp/hfw-1.0.0.tar.gz'
-        Extracting from tar archive /var/tmp/hfw-1.0.0.tar.gz
+        Request to install '/var/tmp/hfw-0.3.0.tar.gz'
+        Extracting from tar archive /var/tmp/hfw-0.3.0.tar.gz
         Saving installer file to /home/weewx/bin/user/installer/Hfw
-        Saved configuration dictionary. Backup copy at /home/weewx/weewx.conf.20161123124410
-        Finished installing extension '/var/tmp/hfw-1.0.0.tar.gz'
+        Saved configuration dictionary. Backup copy at /home/weewx/weewx.conf.20200923124410
+        Finished installing extension '/var/tmp/hfw-0.3.0.tar.gz'
 
-4. Start WeeWX:
+4. Restart WeeWX:
 
-    $ sudo /etc/init.d/weewx start
+    $ sudo /etc/init.d/weewx restart
 
 	or
 
-    $ sudo service weewx start
+    $ sudo service weewx restart
 
     or
 
-    $ sudo systemctl start weewx
+    $ sudo systemctl start restart
 
 This will result in the Highcharts for WeeWX JSON data files being generated
 during each report generation cycle. A default installation will result in the
@@ -90,14 +84,11 @@ Manual installation
 WeeWX releases page (https://github.com/gjr80/weewx-highcharts/releases) into
 a directory accessible from the WeeWX machine.
 
-    $ wget -P $DOWNLOAD_ROOT https://github.com/gjr80/weewx-highcharts/releases/download/v1.0.0/hfw-1.0.0.tar.gz
-
-	where $DOWNLOAD_ROOT is the path to the directory where the Highcharts for 
-    WeeWX extension is to be downloaded.
+    $ wget -P /var/tmp https://github.com/gjr80/weewx-highcharts/releases/download/v0.3.0/hfw-0.3.0.tar.gz
 
 2.  Unpack the extension as follows:
 
-    $ tar xvfz hfw-1.0.0.tar.gz
+    $ tar xvfz hfw-0.3.0.tar.gz
 
 3.  Copy files from within the resulting folder as follows:
 
@@ -214,17 +205,17 @@ sub-section:
         [[[CheetahGenerator]]]
             HTML_ROOT = public_html/json
 
-6. Start WeeWX:
+6. Restart WeeWX:
 
-    $ sudo /etc/init.d/weewx start
+    $ sudo /etc/init.d/weewx restart
 
 	or
 
-    $ sudo service weewx start
+    $ sudo service weewx restart
 
     or
 
-    $ sudo systemctl start weewx
+    $ sudo systemctl start restart
 
 This will result in the Highcharts for WeeWX JSON data files being generated
 during each report generation cycle. A default installation will resulting in 

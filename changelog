@@ -1,5 +1,8 @@
-v1.0.0
+v0.3.0
 *   now supports WeeWX v4.0.0 under python 2 or python 3
+*   renamed highchartsSearchX.py to highchartssearchlist.py
+*   refactored get_extension_list() code in each SLE class
+*   merged highcharts.py code into highchartssearchlist.py
 v0.2.2
 *   Fixed bug in getDaySummaryVectors() that resulted in year wind direction 
     plot always displaying 90 degrees.
