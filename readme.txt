@@ -70,7 +70,7 @@ a directory accessible from the WeeWX machine.
 
     or
 
-    $ sudo systemctl start restart
+    $ sudo systemctl restart weewx
 
 This will result in the Highcharts for WeeWX JSON data files being generated
 during each report generation cycle. A default installation will result in the
@@ -215,7 +215,7 @@ sub-section:
 
     or
 
-    $ sudo systemctl start restart
+    $ sudo systemctl restart weewx
 
 This will result in the Highcharts for WeeWX JSON data files being generated
 during each report generation cycle. A default installation will resulting in 
