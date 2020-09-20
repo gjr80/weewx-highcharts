@@ -46,7 +46,7 @@ The preferred method to install the *Highcharts for WeeWX* extension is to use t
 	    
     or
     
-        $ sudo systemctl stop restart
+        $ sudo systemctl restart weewx
 
 This will result in the *Highcharts for WeeWX* JSON data files being generated during each report generation cycle. A default installation will result in the generated JSON data files being placed in the *$HTML_ROOT/json* directory. The *Highcharts for WeeWX* installation can be further customized (eg units of measure, file locations etc) by referring to the *Highcharts for WeeWX* wiki.
 
