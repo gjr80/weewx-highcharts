@@ -3,6 +3,7 @@ v0.3.0
 *   renamed highchartsSearchX.py to highchartssearchlist.py
 *   refactored get_extension_list() code in each SLE class
 *   merged highcharts.py code into highchartssearchlist.py
+*   update to jquery 3.5.1
 v0.2.2
 *   Fixed bug in getDaySummaryVectors() that resulted in year wind direction 
     plot always displaying 90 degrees.
