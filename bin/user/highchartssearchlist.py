@@ -77,41 +77,142 @@ except ImportError:
         logmsg(syslog.LOG_DEBUG, msg)
 
 
-def round_none(value, places):
-    """Round value to 'places' places but also permit a value of None."""
+# ============================================================================
+#                    class HighchartsDaySummarySearchList
+# ============================================================================
 
-    if value is not None:
+
+class HighchartsDaySummarySearchList(weewx.cheetahgenerator.SearchList):
+    """Base class for a Highcharts search list that uses Daily Summaries."""
+
+    def __init__(self, generator):
+        # initialize my base class:
+        super(HighchartsDaySummarySearchList, self).__init__(generator)
+
+    @staticmethod
+    def get_day_summary_vectors(db_manager, obs_type, timespan, agg_list=['max']):
+        """Return a vector of aggregate data from the WeeWX daily summaries.
+
+            Parameters:
+              db_manager: A database manager object for the WeeWX archive.
+
+              obs_type:   A statistical type, such as 'outTemp' 'barometer' etc.
+
+              timespan:   TimeSpan object representing the time span over which the
+                          vector is required.
+
+              agg_list:   A list of the aggregates required eg ['max', 'min'].
+                          Member elements can be any of 'min', 'max', 'mintime',
+                          'maxtime', 'gustdir', 'sum', 'count', 'avg', 'rms',
+                          'vecavg' or 'vecdir'.
+           """
+
+        # the list of supported aggregates
+        vector_aggs = ['gustdir', 'rms', 'vecavg', 'vecdir']
+        # sql field list for scalar types
+        scalar_fields = 'dateTime,min,mintime,max,maxtime,sum,count,wsum,sumtime'
+        # sql field list for vector types
+        vector_fields = ','.join([scalar_fields,
+                                  'max_dir,xsum,ysum,dirsumtime,squaresum,wsquaresum'])
+        # setup up a list of lists for our vectors
+        _vec = [list() for x in range(len(agg_list))]
+        # initialise each list in the list of lists
+        for agg in agg_list:
+            _vec[agg_list.index(agg)] = list()
+        # setup up our time vector list
+        _time_vec = list()
+        # initialise a dictionary for our results
+        _return = {}
+        # get the unit system in use
+        _row = db_manager.getSql("SELECT usUnits FROM %s LIMIT 1;" % db_manager.table_name)
+        std_unit_system = _row[0] if _row is not None else None
+        # the list of fields we need depend on whether we have a scalar type or a
+        # vector type, which one is it
+        if any(x in vector_aggs for x in agg_list):
+            # it's a vector
+            sql_fields = vector_fields
+        else:
+            # it's a scalar
+            sql_fields = scalar_fields
+        # get our interpolation dictionary for the query
+        inter_dict = {'start': weeutil.weeutil.startOfDay(timespan.start),
+                      'stop': timespan.stop,
+                      'table_name': 'archive_day_%s' % obs_type,
+                      'sql_fields': sql_fields}
+        # get a cursor object for our query
+        _cursor = db_manager.connection.cursor()
         try:
-            return round(value, places)
-        except TypeError:
-            pass
-    return None
+            # put together our SQL query string
+            sql_str = "SELECT %(sql_fields)s FROM %(table_name)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s" % inter_dict
+            # loop through each record our query returns
+            for _rec in _cursor.execute(sql_str):
+                # loop through each aggregate we have been asked for
+                for agg in agg_list:
+                    # Sql query result fields will vary depending on whether the
+                    # underlying obs is a scalar or vector type. At the moment
+                    # 'wind' is the only vector obs. Fields are as follows:
+                    # scalar: [0]=dateTime    [1]=min        [2]=mintime     [3]=max
+                    #         [4]=maxtime     [5]=sum        [6]=count       [7]=wsum
+                    #         [8]=sumtime
+                    # vector: [0]=dateTime    [1]=min        [2]=mintime     [3]=max
+                    #         [4]=maxtime     [5]=sum        [6]=count       [7]=wsum
+                    #         [8]=sumtime     [9]=max_dir    [10]=xsum       [11]=ysum
+                    #         [12]=dirsumtime [13]=squaresum [14]=wsquaresum
+
+                    # calculate the aggregate
+                    if agg == 'min':
+                        _result = _rec[1]
+                    elif agg == 'max':
+                        _result = _rec[3]
+                    elif agg == 'sum':
+                        _result = _rec[5]
+                    elif agg == 'gustdir':
+                        _result = _rec[9]
+                    elif agg == 'mintime':
+                        _result = int(_rec[2]) if _rec[2] else None
+                    elif agg == 'maxtime':
+                        _result = int(_rec[4]) if _rec[4] else None
+                    elif agg == 'count':
+                        _result = int(_rec[6]) if _rec[6] else None
+                    elif agg == 'avg':
+                        _result = _rec[7] / _rec[8] if _rec[6] else None
+                    elif agg == 'rms':
+                        _result = math.sqrt(_rec[14] / _rec[8]) if _rec[6] else None
+                    elif agg == 'vecavg':
+                        _result = math.sqrt((_rec[10] ** 2 + _rec[11] ** 2) / _rec[8] ** 2) if _rec[6] else None
+                    elif agg == 'vecdir':
+                        if _rec[10] == 0.0 and _rec[11] == 0.0:
+                            _result = None
+                        elif _rec[10] and _rec[11]:
+                            deg = 90.0 - math.degrees(math.atan2(_rec[11], _rec[10]))
+                            _result = deg if deg >= 0.0 else deg + 360.0
+                        else:
+                            _result = None
+                    # if we have not found it then return None
+                    else:
+                        _result = None
+                    # add the aggregate to our vector
+                    _vec[agg_list.index(agg)].append(_result)
+                # add the time to our time vector
+                _time_vec.append(_rec[0])
+        finally:
+            # close our cursor
+            _cursor.close()
+        # get unit type and group for time
+        (_time_type, _time_group) = weewx.units.getStandardUnitType(std_unit_system,
+                                                                    'dateTime')
+        # loop through each aggregate we were asked for getting unit and group and
+        # producing a ValueTuple and adding to our result dictionary
+        for agg in agg_list:
+            (t, g) = weewx.units.getStandardUnitType(std_unit_system, obs_type, agg)
+            _return[agg] = ValueTuple(_vec[agg_list.index(agg)], t, g)
+        # return our time vector and dictionary of aggregate vectors
+        return ValueTuple(_time_vec, _time_type, _time_group), _return
 
 
-def round_int(value, places):
-    """Round value to 'places' but return as an integer if places=0."""
-
-    if places == 0:
-        return int(round(value, 0))
-    else:
-        return round(value, places)
-
-
-def get_ago(dt, d_years=0, d_months=0):
-    """ Function to return date object holding date d_years and d_months ago.
-
-       If we try to return an invalid date due to differing month lengths
-       (eg 30 Feb or 31 Sep) then just return the end of month (ie 28 Feb
-       (if not a leap year else 29 Feb) or 30 Sep).
-    """
-
-    # get year number, month number and day number applying offset as required
-    _y, _m, _d = dt.year + d_years, dt.month + d_months, dt.day
-    # calculate actual month number taking into account EOY rollover
-    _a, _m = divmod(_m - 1, 12)
-    # calculate and return date object
-    _eom = calendar.monthrange(_y + _a, _m + 1)[1]
-    return date(_y + _a, _m + 1, _d if _d <= _eom else _eom)
+# ============================================================================
+#                          class HighchartsMinRanges
+# ============================================================================
 
 
 class HighchartsMinRanges(weewx.cheetahgenerator.SearchList):
@@ -166,6 +267,11 @@ class HighchartsMinRanges(weewx.cheetahgenerator.SearchList):
             logdbg("HighchartsMinRanges SLE executed in %0.3f seconds" % (t2 - t1))
         # return our data dict
         return [mr_dict]
+
+
+# ============================================================================
+#                            class HighchartsWeek
+# ============================================================================
 
 
 class HighchartsWeek(weewx.cheetahgenerator.SearchList):
@@ -415,12 +521,17 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
         return [search_list_extension]
 
 
-class HighchartsYear(weewx.cheetahgenerator.SearchList):
+# ============================================================================
+#                            class HighchartsYear
+# ============================================================================
+
+
+class HighchartsYear(HighchartsDaySummarySearchList):
     """SearchList to generate JSON vectors for Highcharts year plots."""
 
     def __init__(self, generator):
         # initialize my base class:
-        super(HighchartsYear, self).__init__(self, generator)
+        super(HighchartsYear, self).__init__(generator)
 
         # Where do we get our appTemp data? WeeWX 4.0.0 introduced the
         # wview_extended schema which contains field appTemp but it may or may
@@ -442,126 +553,6 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
             apptemp_binding = None
         self.apptemp_binding = apptemp_binding
 
-    @staticmethod
-    def get_day_summary_vectors(db_manager, obs_type, timespan, agg_list=['max']):
-        """Return a vector of aggregate data from the WeeWX daily summaries.
-
-            Parameters:
-              db_manager: A database manager object for the WeeWX archive.
-
-              obs_type:   A statistical type, such as 'outTemp' 'barometer' etc.
-
-              timespan:   TimeSpan object representing the time span over which the
-                          vector is required.
-
-              agg_list:   A list of the aggregates required eg ['max', 'min'].
-                          Member elements can be any of 'min', 'max', 'mintime',
-                          'maxtime', 'gustdir', 'sum', 'count', 'avg', 'rms',
-                          'vecavg' or 'vecdir'.
-           """
-
-        # the list of supported aggregates
-        vector_aggs = ['gustdir', 'rms', 'vecavg', 'vecdir']
-        # sql field list for scalar types
-        scalar_fields = 'dateTime,min,mintime,max,maxtime,sum,count,wsum,sumtime'
-        # sql field list for vector types
-        vector_fields = ','.join([scalar_fields,
-                                  'max_dir,xsum,ysum,dirsumtime,squaresum,wsquaresum'])
-        # setup up a list of lists for our vectors
-        _vec = [list() for x in range(len(agg_list))]
-        # initialise each list in the list of lists
-        for agg in agg_list:
-            _vec[agg_list.index(agg)] = list()
-        # setup up our time vector list
-        _time_vec = list()
-        # initialise a dictionary for our results
-        _return = {}
-        # get the unit system in use
-        _row = db_manager.getSql("SELECT usUnits FROM %s LIMIT 1;" % db_manager.table_name)
-        std_unit_system = _row[0] if _row is not None else None
-        # the list of fields we need depend on whether we have a scalar type or a
-        # vector type, which one is it
-        if any(x in vector_aggs for x in agg_list):
-            # it's a vector
-            sql_fields = vector_fields
-        else:
-            # it's a scalar
-            sql_fields = scalar_fields
-        # get our interpolation dictionary for the query
-        inter_dict = {'start': weeutil.weeutil.startOfDay(timespan.start),
-                      'stop': timespan.stop,
-                      'table_name': 'archive_day_%s' % obs_type,
-                      'sql_fields': sql_fields}
-        # get a cursor object for our query
-        _cursor = db_manager.connection.cursor()
-        try:
-            # put together our SQL query string
-            sql_str = "SELECT %(sql_fields)s FROM %(table_name)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s" % inter_dict
-            # loop through each record our query returns
-            for _rec in _cursor.execute(sql_str):
-                # loop through each aggregate we have been asked for
-                for agg in agg_list:
-                    # Sql query result fields will vary depending on whether the
-                    # underlying obs is a scalar or vector type. At the moment 
-                    # 'wind' is the only vector obs. Fields are as follows:
-                    # scalar: [0]=dateTime    [1]=min        [2]=mintime     [3]=max
-                    #         [4]=maxtime     [5]=sum        [6]=count       [7]=wsum
-                    #         [8]=sumtime
-                    # vector: [0]=dateTime    [1]=min        [2]=mintime     [3]=max
-                    #         [4]=maxtime     [5]=sum        [6]=count       [7]=wsum
-                    #         [8]=sumtime     [9]=max_dir    [10]=xsum       [11]=ysum
-                    #         [12]=dirsumtime [13]=squaresum [14]=wsquaresum
-
-                    # calculate the aggregate
-                    if agg == 'min':
-                        _result = _rec[1]
-                    elif agg == 'max':
-                        _result = _rec[3]
-                    elif agg == 'sum':
-                        _result = _rec[5]
-                    elif agg == 'gustdir':
-                        _result = _rec[9]
-                    elif agg == 'mintime':
-                        _result = int(_rec[2]) if _rec[2] else None
-                    elif agg == 'maxtime':
-                        _result = int(_rec[4]) if _rec[4] else None
-                    elif agg == 'count':
-                        _result = int(_rec[6]) if _rec[6] else None
-                    elif agg == 'avg':
-                        _result = _rec[7] / _rec[8] if _rec[6] else None
-                    elif agg == 'rms':
-                        _result = math.sqrt(_rec[14] / _rec[8]) if _rec[6] else None
-                    elif agg == 'vecavg':
-                        _result = math.sqrt((_rec[10] ** 2 + _rec[11] ** 2) / _rec[8] ** 2) if _rec[6] else None
-                    elif agg == 'vecdir':
-                        if _rec[10] == 0.0 and _rec[11] == 0.0:
-                            _result = None
-                        elif _rec[10] and _rec[11]:
-                            deg = 90.0 - math.degrees(math.atan2(_rec[11], _rec[10]))
-                            _result = deg if deg >= 0.0 else deg + 360.0
-                        else:
-                            _result = None
-                    # if we have not found it then return None
-                    else:
-                        _result = None
-                    # add the aggregate to our vector
-                    _vec[agg_list.index(agg)].append(_result)
-                # add the time to our time vector
-                _time_vec.append(_rec[0])
-        finally:
-            # close our cursor
-            _cursor.close()
-        # get unit type and group for time
-        (_time_type, _time_group) = weewx.units.getStandardUnitType(std_unit_system,
-                                                                    'dateTime')
-        # loop through each aggregate we were asked for getting unit and group and
-        # producing a ValueTuple and adding to our result dictionary
-        for agg in agg_list:
-            (t, g) = weewx.units.getStandardUnitType(std_unit_system, obs_type, agg)
-            _return[agg] = ValueTuple(_vec[agg_list.index(agg)], t, g)
-        # return our time vector and dictionary of aggregate vectors
-        return ValueTuple(_time_vec, _time_type, _time_group), _return
-    
     def get_extension_list(self, timespan, db_lookup):
         """Generate the JSON vectors and return as a list of dictionaries.
 
@@ -620,9 +611,9 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
             except weewx.UnknownBinding:
                 raise
         else:
-            apptemp_min_vt = None
-            apptemp_max_vt = None
-            apptemp_avg_vt = None
+            apptemp_min_vt = ValueTuple(None, None, None)
+            apptemp_max_vt = ValueTuple(None, None, None)
+            apptemp_avg_vt = ValueTuple(None, None, None)
         # get our windchill vector
         (windchill_time_vt, windchill_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
                                                                            obs_type='windchill', 
@@ -751,21 +742,21 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         # appTemp. If we don't have any source data then set our JSON string to
         # None
         if apptemp_min_round is not None and apptemp_max_round is not None:
-            app_temp_min_max_json = json.dumps(list(zip(time_ms, apptemp_min_round, apptemp_max_round)))
+            apptemp_min_max_json = json.dumps(list(zip(time_ms, apptemp_min_round, apptemp_max_round)))
         else:
-            app_temp_min_max_json = None
+            apptemp_min_max_json = None
         if apptemp_min_round is not None:
-            app_temp_min_json = json.dumps(list(zip(time_ms, apptemp_min_round)))
+            apptemp_min_json = json.dumps(list(zip(time_ms, apptemp_min_round)))
         else:
-            app_temp_min_json = None
+            apptemp_min_json = None
         if apptemp_max_round is not None:
-            app_temp_max_json = json.dumps(list(zip(time_ms, apptemp_max_round)))
+            apptemp_max_json = json.dumps(list(zip(time_ms, apptemp_max_round)))
         else:
-            app_temp_max_json = None
+            apptemp_max_json = None
         if apptemp_avg_round is not None:
-            app_temp_avg_json = json.dumps(list(zip(time_ms, apptemp_avg_round)))
+            apptemp_avg_json = json.dumps(list(zip(time_ms, apptemp_avg_round)))
         else:
-            app_temp_avg_json = None
+            apptemp_avg_json = None
         windchill_avg_json = json_zip_vectors([windchill_avg_round], time_ms)
         heatindex_avg_json = json_zip_vectors([heatindex_avg_round], time_ms)
         outhumidity_min_max_json = json_zip_vectors([outhumidity_min_round, outhumidity_max_round], time_ms)
@@ -790,10 +781,10 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         # put into a dictionary to return
         search_list_extension = {'outtemp_min_max_json': outtemp_min_max_json,
                                  'outtemp_avg_json': outtemp_avg_json,
-                                 'app_temp_min_max_json': app_temp_min_max_json,
-                                 'app_temp_min_json': app_temp_min_json,
-                                 'app_temp_max_json': app_temp_max_json,
-                                 'app_temp_avg_json': app_temp_avg_json,
+                                 'apptemp_min_max_json': apptemp_min_max_json,
+                                 'apptemp_min_json': apptemp_min_json,
+                                 'apptemp_max_json': apptemp_max_json,
+                                 'apptemp_avg_json': apptemp_avg_json,
                                  'windchill_avg_json': windchill_avg_json,
                                  'heatindex_avg_json': heatindex_avg_json,
                                  'outhumidity_min_max_json': outhumidity_min_max_json,
@@ -825,7 +816,12 @@ class HighchartsYear(weewx.cheetahgenerator.SearchList):
         return [search_list_extension]
 
 
-class HighchartsWindRose(weewx.cheetahgenerator.SearchList):
+# ============================================================================
+#                          class HighchartsWindRose
+# ============================================================================
+
+
+class HighchartsWindRose(HighchartsDaySummarySearchList):
     """SearchList to generate JSON vectors for Highcharts windrose plots."""
 
     default_speedfactor = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0]
@@ -845,7 +841,7 @@ class HighchartsWindRose(weewx.cheetahgenerator.SearchList):
 
     def __init__(self, generator):
         # initialize my base class:
-        super(HighchartsWindRose, self).__init__(self, generator)
+        super(HighchartsWindRose, self).__init__(generator)
 
         # get a dictionary of our skin settings
         windrose_dict = self.generator.skin_dict['Extras']['WindRose']
@@ -862,11 +858,26 @@ class HighchartsWindRose(weewx.cheetahgenerator.SearchList):
         agg_type = agg_type.strip().lower() if agg_type is not None else None
         self.agg_type = agg_type if agg_type in [None, 'avg', 'max', 'min'] else None
         # get any aggregate interval
-        agg_interval = weeutil.weeutil.to_int(windrose_dict.get('aggregate_interval',
-                                                                0))
-        self.agg_interval = agg_interval if agg_interval > 0 else None
+        if self.agg_type is not None:
+            agg_interval = weeutil.weeutil.to_int(windrose_dict.get('aggregate_interval',
+                                                                    0))
+            self.agg_interval = agg_interval if agg_interval > 0 else None
+        else:
+            self.agg_interval = None
         # get speed band boundaries, if not defined then set some defaults
-        speedfactor = windrose_dict.get('speedfactor', self.default_speedfactor)
+        sf = weeutil.weeutil.option_as_list(windrose_dict.get('speedfactor',
+                                                              self.default_speedfactor))
+        # If a speedfactor was specified in the config dict it will be returned
+        # as a list of strings, we need a list of numbers so do the type
+        # conversion just in case. Wrap in a try..except in case one of the
+        # elements can't be converted, if that is the case then use the default.
+        try:
+            speedfactor = [float(a) for a in sf]
+        except ValueError:
+            # we could not convert an element so use the default
+            speedfactor = self.default_speedfactor
+        # check that we have sufficient elements in the speedfactor list and
+        # that their values are acceptable, if not use the default
         if len(speedfactor) != 7 or max(speedfactor) > 1.0 or min(speedfactor) < 0.0:
             speedfactor = self.default_speedfactor
         self.speedfactor = speedfactor
@@ -1242,7 +1253,44 @@ class HighchartsWindRose(weewx.cheetahgenerator.SearchList):
 # ==============================================================================
 
 
-def json_zip_vectors(timestamp_vector, list_of_vectors):
+def round_none(value, places):
+    """Round value to 'places' places but also permit a value of None."""
+
+    if value is not None:
+        try:
+            return round(value, places)
+        except TypeError:
+            pass
+    return None
+
+
+def round_int(value, places):
+    """Round value to 'places' but return as an integer if places=0."""
+
+    if places == 0:
+        return int(round(value, 0))
+    else:
+        return round(value, places)
+
+
+def get_ago(dt, d_years=0, d_months=0):
+    """ Function to return date object holding date d_years and d_months ago.
+
+       If we try to return an invalid date due to differing month lengths
+       (eg 30 Feb or 31 Sep) then just return the end of month (ie 28 Feb
+       (if not a leap year else 29 Feb) or 30 Sep).
+    """
+
+    # get year number, month number and day number applying offset as required
+    _y, _m, _d = dt.year + d_years, dt.month + d_months, dt.day
+    # calculate actual month number taking into account EOY rollover
+    _a, _m = divmod(_m - 1, 12)
+    # calculate and return date object
+    _eom = calendar.monthrange(_y + _a, _m + 1)[1]
+    return date(_y + _a, _m + 1, _d if _d <= _eom else _eom)
+
+
+def json_zip_vectors(list_of_vectors, timestamp_vector):
     """Create a JSON format vector of timestamp, data pairs.
 
     Take a vector of timestamps and a list of data vectors and return a JSON
