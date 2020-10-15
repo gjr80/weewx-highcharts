@@ -17,9 +17,12 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see http://www.gnu.org/licenses/.
 
-Version: 0.3.0                                      Date: 13 September 2020
+Version: 0.3.1                                      Date: 16 October 2020
 
 Revision History
+    16 October 2020     v0.3.1
+        - fixed bug encountered when there are one or more None values returned
+          in speed_vec_vt.value
     13 September 2020   v0.3.0
         - renamed file
         - now WeeWX 4.0.0 python 2/3 compatible
@@ -27,8 +30,8 @@ Revision History
     4 September 2018    v0.2.2
         - minor comment editing
     16 May 2017         v0.2.1
-        - Fixed bug with day/week windrose getSqlVectors call that resulted in
-          'IndexError: list index out of range' error on line 962.
+        - fixed bug with day/week windrose getSqlVectors call that resulted in
+          'IndexError: list index out of range' error on line 962
     4 May 2017          v0.2.0
         - Removed hard coding of weeWX-WD bindings for appTemp and Insolation
           data. Now attempts to obtain bindings for each from WeeWX-WD, if
@@ -958,7 +961,15 @@ class HighchartsWindRose(HighchartsDaySummarySearchList):
         speed_units_str = self.generator.skin_dict['Units']['Labels'].get(speed_vec_vt.unit).strip()
         # to get a better display we will set our upper speed to a multiple of 10
         # find maximum speed from our data
-        max_speed = max(speed_vec_vt.value)
+        # it is possible there could be a None value in speed_vec_vt.value so
+        # strip out any None values first, it is also possible that there could
+        # be no non-None values in speed_vec_vt.value so be prepared to catch
+        # the ValueError and use an appropriate default
+        try:
+            max_speed = max([v for v in speed_vec_vt.value if v is not None])
+        except ValueError as e:
+            # there were no non-None values so use a reasonable default
+            max_speed = 10
         # set upper speed range for our plot
         max_speed_range = (int(max_speed/10.0) + 1) * 10
         # setup a list to hold the cutoff speeds for our stacked columns on our
