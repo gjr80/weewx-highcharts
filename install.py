@@ -10,9 +10,13 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
                      Installer for Highcharts for WeeWX
 
- Version: 0.3.0                                         Date: 20 September 2020
+ Version: 0.3.2                                         Date: 17 March 2021
 
  Revision History
+    17 March 2021
+        - version number change only
+    16 October 2020
+        - version number change only
     20 September 2020   v0.3.0
          - now supports WeeWX 4.0.0 under python 2 or python 3
          - removed highcharts.py from install file list
@@ -34,7 +38,7 @@ from distutils.version import StrictVersion
 from setup import ExtensionInstaller
 
 REQUIRED_VERSION = "3.4.0"
-HFW_VERSION = "0.3.0"
+HFW_VERSION = "0.3.2"
 
 def loader():
     return HfwInstaller()

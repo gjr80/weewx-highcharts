@@ -3,7 +3,7 @@ highchartssearchlist.py
 
 Search List Extensions to support the weewx-highcharts extension.
 
-Copyright (C) 2016-20 Gary Roderick               gjroderick<at>gmail.com
+Copyright (C) 2016-21 Gary Roderick               gjroderick<at>gmail.com
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
@@ -17,9 +17,14 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see http://www.gnu.org/licenses/.
 
-Version: 0.3.1                                      Date: 16 October 2020
+Version: 0.3.2                                      Date: 16 October 2020
 
 Revision History
+    17 March 2021       v0.3.2
+        - bindings for appTemp and maxSolarRad are now specified under
+          skin.conf [Extras] using apptemp_binding and insolation_binding
+          options
+        - replaced getSqlVectors() calls with xtypes.get_series() calls
     16 October 2020     v0.3.1
         - fixed bug encountered when there are one or more None values returned
           in speed_vec_vt.value
@@ -55,6 +60,7 @@ import weewx
 import weewx.cheetahgenerator
 import weewx.units
 import weeutil.weeutil
+import weewx.xtypes
 from weewx.units import ValueTuple, getStandardUnitType, convert
 from weeutil.weeutil import TimeSpan, option_as_list
 
@@ -74,7 +80,7 @@ except ImportError:
     import syslog
 
     def logmsg(level, msg):
-        syslog.syslog(level, 'gw1000: %s' % msg)
+        syslog.syslog(level, 'highcharts: %s' % msg)
 
     def logdbg(msg):
         logmsg(syslog.LOG_DEBUG, msg)
@@ -83,7 +89,6 @@ except ImportError:
 # ============================================================================
 #                    class HighchartsDaySummarySearchList
 # ============================================================================
-
 
 class HighchartsDaySummarySearchList(weewx.cheetahgenerator.SearchList):
     """Base class for a Highcharts search list that uses Daily Summaries."""
@@ -217,7 +222,6 @@ class HighchartsDaySummarySearchList(weewx.cheetahgenerator.SearchList):
 #                          class HighchartsMinRanges
 # ============================================================================
 
-
 class HighchartsMinRanges(weewx.cheetahgenerator.SearchList):
     """SearchList to return y-axis minimum range values for each plot."""
 
@@ -276,7 +280,6 @@ class HighchartsMinRanges(weewx.cheetahgenerator.SearchList):
 #                            class HighchartsWeek
 # ============================================================================
 
-
 class HighchartsWeek(weewx.cheetahgenerator.SearchList):
     """SearchList to generate JSON vectors for Highcharts week plots."""
 
@@ -296,40 +299,40 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
         # databases that contain maxSolarRad and appTemp.
 
         # maxSolarRad
-        if 'Highcharts' in generator.config_dict['StdReport']:
-            insolation_binding = generator.config_dict['StdReport']['Highcharts'].get('insolation_binding')
+        if 'Extras' in generator.skin_dict:
+            insolation_binding = generator.skin_dict['Extras'].get('insolation_binding',
+                                                                   'wx_binding')
             # just in case insolation_binding is included but not set
             if insolation_binding == '':
-                insolation_binding = None
+                insolation_binding = 'wx_binding'
         else:
-            insolation_binding = None
+            insolation_binding = 'wx_binding'
         self.insolation_binding = insolation_binding
         # appTemp
-        if 'Highcharts' in generator.config_dict['StdReport']:
-            apptemp_binding = generator.config_dict['StdReport']['Highcharts'].get('apptemp_binding')
+        if 'Extras' in generator.skin_dict:
+            apptemp_binding = generator.skin_dict['Extras'].get('apptemp_binding',
+                                                                'wx_binding')
             # just in case apptemp_binding is included but not set
             if apptemp_binding == '':
-                apptemp_binding = None
+                apptemp_binding = 'wx_binding'
         else:
-            apptemp_binding = None
+            apptemp_binding = 'wx_binding'
         self.apptemp_binding = apptemp_binding
 
     def get_vector(self, db_manager, timespan, obs_type,
-                   aggregate_type=None,
-                   aggregate_interval=None):
+                   aggregate_type=None, aggregate_interval=None):
         """Get a data and timestamp vector for a given obs.
 
-        Returns a two vectors. The first is the obs data vector and the second
+        Returns two vectors. The first is the obs data vector and the second
         is the timestamp vector in ms.
         """
 
         # get our vectors as ValueTuples, wrap in a try..except in case
         # obs_type does not exist
         try:
-            (t_start_vt, t_stop_vt, obs_vt) = db_manager.getSqlVectors(timespan,
-                                                                       obs_type,
-                                                                       aggregate_type=aggregate_type,
-                                                                       aggregate_interval=aggregate_interval)
+            (t_start_vt, t_stop_vt, obs_vt) = weewx.xtypes.get_series(obs_type, timespan, db_manager,
+                                                                      aggregate_type=aggregate_type,
+                                                                      aggregate_interval=aggregate_interval)
         except weewx.UnknownType:
             logdbg("Unknown type '%s'" % obs_type)
             return None, None
@@ -388,29 +391,19 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
                                                                 timespan=t_span,
                                                                 obs_type='dewpoint')
 
-        # Get our apparent temperature vector. If we have a binding for appTemp
-        # data then use it otherwise try to use the current WeeWX database but
-        # be prepared to catch the exception if field appTemp does not exist.
-        # If we don't have a working binding then set the vector to None.
-        if self.apptemp_binding is not None:
-            # we have an appTemp binding, try to use it
-            try:
-                db_manager = db_lookup(self.apptemp_binding)
-            except weewx.UnknownBinding:
-                # can't find that binding so log it and then try to use our
-                # default binding
-                logdbg("Invalid binding '%s', using default binding instead" % (self.apptemp_binding, ))
-                db_manager = db_lookup()
-        else:
-            db_manager = db_lookup()
+        # Get our apparent temperature vector. We could have a different
+        # binding so call db_lookup() with that binding. Wrap in a try..except
+        # to catch any exceptions.
         try:
-            apptemp_vector, apptemp_time_vector = self.get_vector(db_manager,
+            apptemp_vector, apptemp_time_vector = self.get_vector(db_lookup(self.apptemp_binding),
                                                                   timespan=t_span,
                                                                   obs_type='appTemp')
-        except:
+        except weewx.UnknownBinding:
+            # an UnknownBinding exception has been raised, we can't recover
+            # from this so re-raise the exception, this will cause the report
+            # to abort
             raise
-            # apptemp_vector = None
-            # apptemp_time_vector = None
+
         # get our wind chill vector
         windchill_vector, windchill_time_vector = self.get_vector(db_lookup(),
                                                                   timespan=t_span,
@@ -456,29 +449,19 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
         radiation_vector, radiation_time_vector = self.get_vector(db_lookup(),
                                                                   timespan=t_span,
                                                                   obs_type='radiation')
-        # Get our insolation vector. If we have a binding for maxSolarRad data
-        # then use it otherwise try to use the current WeeWX database but be
-        # prepared to catch the exception if field maxSolarRad does not exist.
-        # If we don't have a working binding then set the vector to None.
-        if self.insolation_binding is not None:
-            # we have an insolation binding, try to use it
-            try:
-                db_manager = db_lookup(self.insolation_binding)
-            except weewx.UnknownBinding:
-                # can't find that binding so log it and then try to use our
-                # default binding
-                logdbg("Invalid binding '%s', using default binding instead" % (self.insolation_binding, ))
-                db_manager = db_lookup()
-        else:
-            db_manager = db_lookup()
+        # Get our insolation vector. We could have a different binding so call
+        # db_lookup() with that binding. Wrap in a try..except to catch any
+        # exceptions.
         try:
-            insolation_vector, insolation_time_vector = self.get_vector(db_manager,
+            insolation_vector, insolation_time_vector = self.get_vector(db_lookup(self.insolation_binding),
                                                                         timespan=t_span,
                                                                         obs_type='maxSolarRad')
-        except:
+        except weewx.UnknownBinding:
+            # an UnknownBinding exception has been raised, we can't recover
+            # from this so re-raise the exception, this will cause the report
+            # to abort
             raise
-            # insolation_vector = None
-            # insolation_time_vector = None
+
         # get our UV vector
         uv_vector, uv_time_vector = self.get_vector(db_lookup(),
                                                     timespan=t_span,
@@ -528,7 +511,6 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
 #                            class HighchartsYear
 # ============================================================================
 
-
 class HighchartsYear(HighchartsDaySummarySearchList):
     """SearchList to generate JSON vectors for Highcharts year plots."""
 
@@ -547,13 +529,14 @@ class HighchartsYear(HighchartsDaySummarySearchList):
         # the database that contains appTemp.
 
         # appTemp binding
-        if 'Highcharts' in generator.config_dict['StdReport']:
-            apptemp_binding = generator.config_dict['StdReport']['Highcharts'].get('apptemp_binding')
+        if 'Extras' in generator.skin_dict:
+            apptemp_binding = generator.skin_dict['Extras'].get('apptemp_binding',
+                                                                'wx_binding')
             # just in case apptemp_binding is included but not set
             if apptemp_binding == '':
-                apptemp_binding = None
+                apptemp_binding = 'wx_binding'
         else:
-            apptemp_binding = None
+            apptemp_binding = 'wx_binding'
         self.apptemp_binding = apptemp_binding
 
     def get_extension_list(self, timespan, db_lookup):
@@ -597,26 +580,24 @@ class HighchartsYear(HighchartsDaySummarySearchList):
         outtemp_max_vt = self.generator.converter.convert(outtemp_dict['max'])
         outtemp_avg_vt = self.generator.converter.convert(outtemp_dict['avg'])
 
-        # Get our appTemp vectors. appTemp data is not normally archived so
-        # only try to get it if we have a binding for it. Wrap in a try..except
-        # to catch any errors. If we don't have a binding then set the vectors
-        # to None
-        if self.apptemp_binding is not None:
-            try:
-                (apptemp_time_vt, apptemp_dict) = self.get_day_summary_vectors(db_lookup('wd_binding'),
-                                                                               'appTemp',
-                                                                               t_span,
-                                                                               ['min', 'max', 'avg'])
-                # get our vector ValueTuple out of the dictionary and convert it
-                apptemp_min_vt = self.generator.converter.convert(apptemp_dict['min'])
-                apptemp_max_vt = self.generator.converter.convert(apptemp_dict['max'])
-                apptemp_avg_vt = self.generator.converter.convert(apptemp_dict['avg'])
-            except weewx.UnknownBinding:
-                raise
-        else:
-            apptemp_min_vt = ValueTuple(None, None, None)
-            apptemp_max_vt = ValueTuple(None, None, None)
-            apptemp_avg_vt = ValueTuple(None, None, None)
+        # Get our appTemp vectors. We could have a different binding so call
+        # db_lookup() with that binding. Wrap in a try..except to catch any
+        # exceptions.
+        try:
+            (apptemp_time_vt, apptemp_dict) = self.get_day_summary_vectors(db_lookup(self.apptemp_binding),
+                                                                           'appTemp',
+                                                                           t_span,
+                                                                           ['min', 'max', 'avg'])
+        except weewx.UnknownBinding:
+            # an UnknownBinding exception has been raised, we can't recover
+            # from this so re-raise the exception, this will cause the report
+            # to abort
+            raise
+        # get our vector ValueTuple out of the dictionary and convert it
+        apptemp_min_vt = self.generator.converter.convert(apptemp_dict['min'])
+        apptemp_max_vt = self.generator.converter.convert(apptemp_dict['max'])
+        apptemp_avg_vt = self.generator.converter.convert(apptemp_dict['avg'])
+
         # get our windchill vector
         (windchill_time_vt, windchill_dict) = self.get_day_summary_vectors(db_manager=db_lookup(),
                                                                            obs_type='windchill', 
@@ -928,17 +909,19 @@ class HighchartsWindRose(HighchartsDaySummarySearchList):
         # initialise a dictionary for our results
         wr_dict = {}
         if period <= 604800:
-            # week or less, get our vectors from archive via getSqlVectors
+            # week or less, get our vectors from archive via xtypes.get_series()
             # get our wind speed vector
             t_span = TimeSpan(timespan.stop - period + 1, timespan.stop)
-            (_x_vt, time_vec_speed_vt, speed_vec_vt) = db_lookup().getSqlVectors(t_span,
-                                                                                 self.source)
+            (_x_vt, time_vec_speed_vt, speed_vec_vt) = weewx.xtypes.get_series(self.source,
+                                                                               t_span,
+                                                                               db_lookup())
             # convert our speed vector
             speed_vec_vt = self.generator.converter.convert(speed_vec_vt)
             # get our wind direction vector
             t_span = TimeSpan(timespan.stop-period + 1, timespan.stop)
-            (_x_vt, time_vec_dir_stop_vt, direction_vec_vt) = db_lookup().getSqlVectors(t_span,
-                                                                                        self.dir)
+            (_x_vt, time_vec_dir_stop_vt, direction_vec_vt) = weewx.xtypes.get_series(self.dir,
+                                                                               t_span,
+                                                                               db_lookup())
         else:
             # get our vectors from daily summaries using custom getStatsVectors
             # get our data tuples for speed

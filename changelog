@@ -1,3 +1,10 @@
+v0.3.2
+*   bindings for appTemp and maxSolarRad are now specified under skin.conf
+    [Extras] using apptemp_binding and insolation_binding options
+*   replaced getSqlVectors() calls with xtypes.get_series() calls
+v0.3.1
+*   fixed bug encountered when there are one or more None values returned in
+    speed_vec_vt.value
 v0.3.0
 *   now supports WeeWX v4.0.0 under python 2 or python 3
 *   renamed highchartsSearchX.py to highchartssearchlist.py
