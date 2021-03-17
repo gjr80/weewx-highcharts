@@ -6,7 +6,7 @@ Search List Extensions (SLE) and supporting JavaScript.
 
 Pre-Requisites
 
-Highcharts for WeeWX requires WeeWX v3.4.0 or greater. The display of the
+Highcharts for WeeWX requires WeeWX v4.5.0 or later. The display of the
 Highcharts for WeeWX extension data on a web page using the included Javascript
 files requires the Highcharts Highstock charting tool and JQuery JavaScript 
 library.
@@ -42,23 +42,23 @@ names are used below:
 WeeWX releases page (https://github.com/gjr80/weewx-highcharts/releases) into
 a directory accessible from the WeeWX machine.
 
-    $ wget -P /var/tmp https://github.com/gjr80/weewx-highcharts/releases/download/v0.3.2/hfw-0.3.2.tar.gz
+    $ wget -P /var/tmp https://github.com/gjr80/weewx-highcharts/releases/download/v0.4.0/hfw-0.4.0.tar.gz
 
 2.  Install the Highcharts for WeeWX extension downloaded at step 1 using the
 *wee_extension* utility:
 
-    $ wee_extension --install=$DOWNLOAD_ROOT/hfw-0.3.2.tar.gz
+    $ wee_extension --install=$DOWNLOAD_ROOT/hfw-0.4.0.tar.gz
 
     Note: Depending on your system/installation the above command may need to
           be prefixed with sudo.
 
     This will result in output similar to the following:
 
-        Request to install '/var/tmp/hfw-0.3.2.tar.gz'
-        Extracting from tar archive /var/tmp/hfw-0.3.2.tar.gz
+        Request to install '/var/tmp/hfw-0.4.0.tar.gz'
+        Extracting from tar archive /var/tmp/hfw-0.4.0.tar.gz
         Saving installer file to /home/weewx/bin/user/installer/Hfw
         Saved configuration dictionary. Backup copy at /home/weewx/weewx.conf.20200923124410
-        Finished installing extension '/var/tmp/hfw-0.3.2.tar.gz'
+        Finished installing extension '/var/tmp/hfw-0.4.0.tar.gz'
 
 4. Restart WeeWX:
 
@@ -84,11 +84,11 @@ Manual installation
 WeeWX releases page (https://github.com/gjr80/weewx-highcharts/releases) into
 a directory accessible from the WeeWX machine.
 
-    $ wget -P /var/tmp https://github.com/gjr80/weewx-highcharts/releases/download/v0.3.2/hfw-0.3.2.tar.gz
+    $ wget -P /var/tmp https://github.com/gjr80/weewx-highcharts/releases/download/v0.4.0/hfw-0.4.0.tar.gz
 
 2.  Unpack the extension as follows:
 
-    $ tar xvfz hfw-0.3.2.tar.gz
+    $ tar xvfz hfw-0.4.0.tar.gz
 
 3.  Copy files from within the resulting folder as follows:
 

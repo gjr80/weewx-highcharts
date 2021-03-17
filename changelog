@@ -1,3 +1,7 @@
+v0.4.0
+*   now uses .series tags introduced in WeeWX v4.5.0
+*   removed SLE entries made redundant due to use of .series tags
+*   now requires WeeWX v4.5.0 or later
 v0.3.2
 *   bindings for appTemp and maxSolarRad are now specified under skin.conf
     [Extras] using apptemp_binding and insolation_binding options

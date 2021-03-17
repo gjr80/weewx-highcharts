@@ -10,10 +10,12 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
                      Installer for Highcharts for WeeWX
 
- Version: 0.3.2                                         Date: 17 March 2021
+ Version: 0.4.0                                         Date: xx xxxxx 2021
 
  Revision History
-    17 March 2021
+    xx xxxxx 2021       v0.4.0
+        - changed required WeeWX version number
+    17 March 2021       v0.3.2
         - version number change only
     16 October 2020
         - version number change only
@@ -37,8 +39,8 @@ import weewx
 from distutils.version import StrictVersion
 from setup import ExtensionInstaller
 
-REQUIRED_VERSION = "3.4.0"
-HFW_VERSION = "0.3.2"
+REQUIRED_VERSION = "4.5.0a1"
+HFW_VERSION = "0.4.0"
 
 def loader():
     return HfwInstaller()

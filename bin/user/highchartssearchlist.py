@@ -17,9 +17,13 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see http://www.gnu.org/licenses/.
 
-Version: 0.3.2                                      Date: 16 October 2020
+Version: 0.4.0                                      Date: xx xxxxx 2021
 
 Revision History
+    xx xxxxx 2021       v0.4.0
+        - now uses .series tags introduced in WeeWX v4.5.0
+        - removed SLE entries made redundant due to use of .series tags
+        - now requires WeeWX v4.5.0 or later
     17 March 2021       v0.3.2
         - bindings for appTemp and maxSolarRad are now specified under
           skin.conf [Extras] using apptemp_binding and insolation_binding
@@ -84,6 +88,8 @@ except ImportError:
 
     def logdbg(msg):
         logmsg(syslog.LOG_DEBUG, msg)
+
+HFW_VERSION = "0.4.0"
 
 
 # ============================================================================
