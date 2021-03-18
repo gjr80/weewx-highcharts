@@ -158,7 +158,8 @@ class HighchartsDaySummarySearchList(weewx.cheetahgenerator.SearchList):
         _cursor = db_manager.connection.cursor()
         try:
             # put together our SQL query string
-            sql_str = "SELECT %(sql_fields)s FROM %(table_name)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s" % inter_dict
+            sql_str = "SELECT %(sql_fields)s FROM %(table_name)s "\
+                      "WHERE dateTime >= %(start)s AND dateTime < %(stop)s" % inter_dict
             # loop through each record our query returns
             for _rec in _cursor.execute(sql_str):
                 # loop through each aggregate we have been asked for
@@ -349,8 +350,6 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
         _start_dt = _ts_dt - datetime.timedelta(days=7)
         # and convert back to a timestamp
         _start_ts = time.mktime(_start_dt.timetuple())
-        # get a TimeSpan object representing the time span of interest
-        t_span = TimeSpan(_start_ts, timespan.stop)
 
         # put into a dictionary to return
         search_list_extension = {'weekPlotStart': _start_ts * 1000,
@@ -893,6 +892,7 @@ def get_ago(dt, d_years=0, d_months=0):
     # calculate and return date object
     _eom = calendar.monthrange(_y + _a, _m + 1)[1]
     return date(_y + _a, _m + 1, _d if _d <= _eom else _eom)
+
 
 # ==============================================================================
 #                              class WdTimeSpanTags

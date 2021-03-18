@@ -43,8 +43,10 @@ from setup import ExtensionInstaller
 REQUIRED_VERSION = "4.5.0a1"
 HFW_VERSION = "0.4.0"
 
+
 def loader():
     return HfwInstaller()
+
 
 class HfwInstaller(ExtensionInstaller):
     def __init__(self):
