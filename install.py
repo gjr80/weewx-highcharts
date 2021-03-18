@@ -15,6 +15,7 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  Revision History
     xx xxxxx 2021       v0.4.0
         - changed required WeeWX version number
+        - removed unused Label, StringFormat and group overrides
     17 March 2021       v0.3.2
         - version number change only
     16 October 2020
@@ -75,73 +76,9 @@ class HfwInstaller(ExtensionInstaller):
                                 'group_degree_day': 'degree_C_day',
                                 'group_pressure': 'hPa',
                                 'group_rain': 'mm',
-                                'group_rainrate': 'mm_per_hour',
                                 'group_speed': 'km_per_hour',
-                                'group_speed2': 'km_per_hour2',
                                 'group_temperature': 'degree_C'
                             },
-                            'StringFormats': {
-                                'centibar': '%.0f',
-                                'cm': '%.2f',
-                                'cm_per_hour': '%.2f',
-                                'degree_C': '%.1f',
-                                'degree_F': '%.1f',
-                                'degree_compass': '%.0f',
-                                'foot': '%.0f',
-                                'hPa': '%.1f',
-                                'inHg': '%.3f',
-                                'inch': '%.2f',
-                                'inch_per_hour': '%.2f',
-                                'km_per_hour': '%.0f',
-                                'km_per_hour2': '%.1f',
-                                'knot': '%.0f',
-                                'knot2': '%.1f',
-                                'mbar': '%.1f',
-                                'meter': '%.0f',
-                                'meter_per_second': '%.1f',
-                                'meter_per_second2': '%.1f',
-                                'mile_per_hour': '%.0f',
-                                'mile_per_hour2': '%.1f',
-                                'mm': '%.1f',
-                                'mmHg': '%.1f',
-                                'mm_per_hour': '%.1f',
-                                'percent': '%.0f',
-                                'uv_index': '%.1f',
-                                'volt': '%.1f',
-                                'watt_per_meter_squared': '%.0f',
-                                'NONE': 'N/A'
-                            },
-                            'Labels': {
-                                'centibar': 'cb',
-                                'cm': 'cm',
-                                'cm_per_hour': 'cm/hr',
-                                'degree_C': '\u00B0 C',
-                                'degree_F': '\u00B0 F',
-                                'degree_compass': '\u00B0',
-                                'foot': 'feet',
-                                'hPa': 'hPa',
-                                'inHg': 'inHg',
-                                'inch': 'in',
-                                'inch_per_hour': 'in/hr',
-                                'km_per_hour': 'km/hr',
-                                'km_per_hour2': 'km/hr',
-                                'knot': 'knots',
-                                'knot2': 'knots',
-                                'mbar': 'mbar',
-                                'meter': 'meters',
-                                'meter_per_second': 'm/s',
-                                'meter_per_second2': 'm/s',
-                                'mile_per_hour': 'mph',
-                                'mile_per_hour2': 'mph',
-                                'mm': 'mm',
-                                'mmHg': 'mmHg',
-                                'mm_per_hour': 'mm/hr',
-                                'percent': '%',
-                                'uv_index': 'Index',
-                                'volt': 'V',
-                                'watt_per_meter_squared': 'W/m\u00B2',
-                                'NONE':      ''
-                            }
                         },
                         'Extras': {
                             'MinRange': {
