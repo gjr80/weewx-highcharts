@@ -894,28 +894,9 @@ def get_ago(dt, d_years=0, d_months=0):
     _eom = calendar.monthrange(_y + _a, _m + 1)[1]
     return date(_y + _a, _m + 1, _d if _d <= _eom else _eom)
 
-
-def json_zip_vectors(list_of_vectors, timestamp_vector):
-    """Create a JSON format vector of timestamp, data pairs.
-
-    Take a vector of timestamps and a list of data vectors and return a JSON
-    formatted string of timestamp, data pairs when data can be one or more data
-    points. If the first data vector in list_of_vectors is None return None.
-    """
-
-    if len(list_of_vectors) > 0 and list_of_vectors[0] is not None:
-        # create a list of zipped timestamp, data pairs
-        list_of_tuples = list(zip(timestamp_vector, *list_of_vectors))
-        # return a JSON formatted string of the list of pairs
-        return json.dumps(list_of_tuples)
-    else:
-        # we have no data so return None
-        return None
-
 # ==============================================================================
 #                              class WdTimeSpanTags
 # ==============================================================================
-
 
 class HighchartsSpans(weewx.cheetahgenerator.SearchList):
     """SLE to return various custom TimeSpanBinder based tags."""
