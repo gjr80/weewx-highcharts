@@ -50,19 +50,20 @@ Revision History
     22 November 2016    v0.1.0
         - initial implementation
 *#
+#import calendar
+#import time
+#import json
+#set $stop_struct = time.localtime($current.dateTime.raw)
+#set $utcOffset = (calendar.timegm($stop_struct) - calendar.timegm(time.gmtime(time.mktime($stop_struct)))) / 60
 [{
 "_version": "week.json.tmpl version 0.4.0",
 "utcoffset": $utcOffset,
 "timespan": {"start": $weekPlotStart, "stop": $weekPlotEnd},
 ##
 "temperatureplot": {"series":
-{"outTemp": {"name": "Temperature", "data": $outTempWeekjson},
-#if $appTempWeekjson is not None
-"dewpoint": {"name": "Dew Point", "data": $dewpointWeekjson},
-"appTemp": {"name": "Apparent Temperature", "data": $appTempWeekjson}},
-#else
-"dewpoint": {"name": "Dew Point", "data": $dewpointWeekjson}},
-#end if
+{"outTemp": {"name": "Temperature", "data": $last_seven_day.outTemp.series().json(time_series='start', time_unit='unix_epoch_ms')},
+"dewpoint": {"name": "Dew Point", "data": $last_seven_day.dewpoint.series().json(time_series='start', time_unit='unix_epoch_ms')},
+"appTemp": {"name": "Apparent Temperature", "data": $last_seven_day.appTemp.series().json(time_series='start', time_unit='unix_epoch_ms')}},
 "units": "$unit.label.outTemp"#slurp
 #if $varExists('$outTemp_min_range')
 , 
@@ -73,11 +74,9 @@ Revision History
 ##
 "windchillplot": {"series":
 {#slurp
-#if $appTempWeekjson is not None
-"appTemp": {"name": "Apparent Temperature", "data": $appTempWeekjson},
-#end if
-"windchill": {"name": "Wind Chill", "data": $windchillWeekjson},
-"heatindex": {"name": "Heat Index", "data": $heatindexWeekjson}},
+"appTemp": {"name": "Apparent Temperature", "data": $last_seven_day.appTemp.series().json(time_series='start', time_unit='unix_epoch_ms')},
+"windchill": {"name": "Wind Chill", "data": $last_seven_day.windchill.series().json(time_series='start', time_unit='unix_epoch_ms')},
+"heatindex": {"name": "Heat Index", "data": $last_seven_day.heatindex.series().json(time_series='start', time_unit='unix_epoch_ms')}},
 "units": "$unit.label.windchill"#slurp
 #if $varExists('$outTemp_min_range')
 , 
@@ -87,7 +86,7 @@ Revision History
 #end if
 ##
 "humidityplot": {"series":
-{"outHumidity": {"name": "Humidity", "data": $outHumidityWeekjson}},
+{"outHumidity": {"name": "Humidity", "data": $last_seven_day.outHumidity.series().json(time_series='start', time_unit='unix_epoch_ms')}},
 "units": "$unit.label.outHumidity"#slurp
 #if $varExists('$outHumidity_min_range')
 , 
@@ -97,7 +96,7 @@ Revision History
 #end if
 ##
 "barometerplot": {"series":
-{"barometer": {"name": "Barometer", "data": $barometerWeekjson}},
+{"barometer": {"name": "Barometer", "data": $last_seven_day.barometer.series().json(time_series='start', time_unit='unix_epoch_ms')}},
 "units": "$unit.label.barometer"#slurp
 #if $varExists('$barometer_min_range')
 , 
@@ -107,8 +106,8 @@ Revision History
 #end if
 ##
 "windplot": {"series":
-{"windSpeed": {"name": "Wind Speed", "data": $windSpeedWeekjson},
-"windGust": {"name": "Wind Gust", "data": $windGustWeekjson}},
+{"windSpeed": {"name": "Wind Speed", "data": $last_seven_day.windSpeed.series().json(time_series='start', time_unit='unix_epoch_ms')},
+"windGust": {"name": "Wind Gust", "data": $last_seven_day.windGust.series().json(time_series='start', time_unit='unix_epoch_ms')}},
 "units": "$unit.label.windSpeed"#slurp
 #if $varExists('$windSpeed_min_range')
 , 
@@ -118,7 +117,7 @@ Revision History
 #end if
 ##
 "winddirplot": {"series":
-{"windDir": {"name": "Wind Direction", "data": $windDirWeekjson}},
+{"windDir": {"name": "Wind Direction", "data": $last_seven_day.windDir.series().json(time_series='start', time_unit='unix_epoch_ms')}},
 "units": "$unit.label.windDir"#slurp
 #if $varExists('$windDir_min_range')
 , 
@@ -128,7 +127,7 @@ Revision History
 #end if
 ##
 "rainplot": {"series":
-{"rain": {"name": "Rainfall", "data": $rainWeekjson}},
+{"rain": {"name": "Rainfall", "data": $last_seven_day.rain.series(aggregation_type='sum', aggregation_interval=3600).json(time_series='start', time_unit='unix_epoch_ms')}},
 "units": "$unit.label.rain"#slurp
 #if $varExists('$rain_min_range')
 , 
@@ -138,12 +137,8 @@ Revision History
 #end if
 ##
 "radiationplot": {"series":
-#if $insolationWeekjson is not None
-{"radiation": {"name": "Solar Radiation", "data": $radiationWeekjson},
-"insolation": {"name": "Theoretical Max Solar Radiation", "data": $insolationWeekjson}},
-#else
-{"radiation": {"name": "Solar Radiation", "data": $radiationWeekjson}},
-#end if
+{"radiation": {"name": "Solar Radiation", "data": $last_seven_day.radiation.series().json(time_series='start', time_unit='unix_epoch_ms')},
+"insolation": {"name": "Theoretical Max Solar Radiation", "data": $last_seven_day.maxSolarRad.series().json(time_series='start', time_unit='unix_epoch_ms')}},
 "units": "$unit.label.radiation"#slurp
 #if $varExists('$radiation_min_range')
 , 
@@ -153,7 +148,7 @@ Revision History
 #end if
 ##
 "uvplot": {"series":
-{"uv": {"name": "UV Index", "data": $uvWeekjson}},
+{"uv": {"name": "UV Index", "data": $last_seven_day.UV.series().json(time_series='start', time_unit='unix_epoch_ms')}},
 "units": "$unit.label.UV"#slurp
 #if $varExists('$UV_min_range')
 , 

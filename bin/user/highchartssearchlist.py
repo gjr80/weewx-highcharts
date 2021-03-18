@@ -294,38 +294,6 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
         # initialize my base class:
         super(HighchartsWeek, self).__init__(generator)
 
-        # Where do we get our maxSolarRad and appTemp data? WeeWX 4.0.0
-        # introduced the wview_extended schema which contains fields appTemp
-        # and maxSolarRad but they may or may not contain data. The default
-        # schema for WeeWX 3.x and earlier does not contain maxSolarRad and
-        # appTemp fields but a user may have added them. In addition 3rd party
-        # extensions such as WeeWX-WD can provide maxSolarRad and appTemp. To
-        # support obtaining maxSolarRad and appTemp data from databases other
-        # than the 'WeeWX' database we will support a config option under
-        # [StdReport][[Highcharts]] where the user can specify bindings for the
-        # databases that contain maxSolarRad and appTemp.
-
-        # maxSolarRad
-        if 'Extras' in generator.skin_dict:
-            insolation_binding = generator.skin_dict['Extras'].get('insolation_binding',
-                                                                   'wx_binding')
-            # just in case insolation_binding is included but not set
-            if insolation_binding == '':
-                insolation_binding = 'wx_binding'
-        else:
-            insolation_binding = 'wx_binding'
-        self.insolation_binding = insolation_binding
-        # appTemp
-        if 'Extras' in generator.skin_dict:
-            apptemp_binding = generator.skin_dict['Extras'].get('apptemp_binding',
-                                                                'wx_binding')
-            # just in case apptemp_binding is included but not set
-            if apptemp_binding == '':
-                apptemp_binding = 'wx_binding'
-        else:
-            apptemp_binding = 'wx_binding'
-        self.apptemp_binding = apptemp_binding
-
     def get_vector(self, db_manager, timespan, obs_type,
                    aggregate_type=None, aggregate_interval=None):
         """Get a data and timestamp vector for a given obs.
@@ -384,123 +352,8 @@ class HighchartsWeek(weewx.cheetahgenerator.SearchList):
         # get a TimeSpan object representing the time span of interest
         t_span = TimeSpan(_start_ts, timespan.stop)
 
-        # get our temperature vector
-        outtemp_vector, outtemp_time_vector = self.get_vector(db_lookup(),
-                                                              timespan=t_span,
-                                                              obs_type='outTemp')
-
-        # get our dewpoint vector
-        dewpoint_vector, dewpoint_time_vector = self.get_vector(db_lookup(),
-                                                                timespan=t_span,
-                                                                obs_type='dewpoint')
-
-        # Get our apparent temperature vector. We could have a different
-        # binding so call db_lookup() with that binding. Wrap in a try..except
-        # to catch any exceptions.
-        try:
-            apptemp_vector, apptemp_time_vector = self.get_vector(db_lookup(self.apptemp_binding),
-                                                                  timespan=t_span,
-                                                                  obs_type='appTemp')
-        except weewx.UnknownBinding:
-            # an UnknownBinding exception has been raised, we can't recover
-            # from this so re-raise the exception, this will cause the report
-            # to abort
-            raise
-
-        # get our wind chill vector
-        windchill_vector, windchill_time_vector = self.get_vector(db_lookup(),
-                                                                  timespan=t_span,
-                                                                  obs_type='windchill')
-        # get our heat index vector
-        heatindex_vector, heatindex_time_vector = self.get_vector(db_lookup(),
-                                                                  timespan=t_span,
-                                                                  obs_type='heatindex')
-        # get our humidity vector
-        outhumidity_vector, outhumidity_time_vector = self.get_vector(db_lookup(),
-                                                                      timespan=t_span,
-                                                                      obs_type='outHumidity')
-        # get our barometer vector
-        barometer_vector, barometer_time_vector = self.get_vector(db_lookup(),
-                                                                  timespan=t_span,
-                                                                  obs_type='barometer')
-        # get our wind speed vector
-        windspeed_vector, windspeed_time_vector = self.get_vector(db_lookup(),
-                                                                  timespan=t_span,
-                                                                  obs_type='windSpeed')
-        # get our wind gust vector
-        windgust_vector, windgust_time_vector = self.get_vector(db_lookup(),
-                                                                timespan=t_span,
-                                                                obs_type='windGust')
-        # get our wind direction vector
-        winddir_vector, winddir_time_vector = self.get_vector(db_lookup(),
-                                                              timespan=t_span,
-                                                              obs_type='windDir')
-        # get our rain vector, need to sum over the hour
-        rain_vector, rain_time_vector = self.get_vector(db_lookup(),
-                                                        timespan=t_span,
-                                                        obs_type='rain',
-                                                        aggregate_type='sum',
-                                                        aggregate_interval=3600)
-        # Check if our last interval is a partial hour. If it is then round up
-        # the last timestamp in the time vector to an hour boundary. This
-        # avoids display issues with the column chart. We need to make sure we
-        # have at least two intervals though.
-        if len(rain_time_vector) > 1:
-            if rain_time_vector[-1] < rain_time_vector[-2] + 3600:
-                rain_time_vector[-1] = rain_time_vector[-2] + 3600
-        # get our radiation vector
-        radiation_vector, radiation_time_vector = self.get_vector(db_lookup(),
-                                                                  timespan=t_span,
-                                                                  obs_type='radiation')
-        # Get our insolation vector. We could have a different binding so call
-        # db_lookup() with that binding. Wrap in a try..except to catch any
-        # exceptions.
-        try:
-            insolation_vector, insolation_time_vector = self.get_vector(db_lookup(self.insolation_binding),
-                                                                        timespan=t_span,
-                                                                        obs_type='maxSolarRad')
-        except weewx.UnknownBinding:
-            # an UnknownBinding exception has been raised, we can't recover
-            # from this so re-raise the exception, this will cause the report
-            # to abort
-            raise
-
-        # get our UV vector
-        uv_vector, uv_time_vector = self.get_vector(db_lookup(),
-                                                    timespan=t_span,
-                                                    obs_type='UV')
-        # format our vectors in json format
-        outtemp_json = json_zip_vectors([outtemp_vector], outtemp_time_vector)
-        dewpoint_json = json_zip_vectors([dewpoint_vector], dewpoint_time_vector)
-        apptemp_json = json_zip_vectors([apptemp_vector], apptemp_time_vector)
-        windchill_json = json_zip_vectors([windchill_vector], windchill_time_vector)
-        heatindex_json = json_zip_vectors([heatindex_vector], heatindex_time_vector)
-        outhumidity_json = json_zip_vectors([outhumidity_vector], outhumidity_time_vector)
-        barometer_json = json_zip_vectors([barometer_vector], barometer_time_vector)
-        windspeed_json = json_zip_vectors([windspeed_vector], windspeed_time_vector)
-        windgust_json = json_zip_vectors([windgust_vector], windgust_time_vector)
-        winddir_json = json_zip_vectors([winddir_vector], winddir_time_vector)
-        rain_json = json_zip_vectors([rain_vector], rain_time_vector)
-        radiation_json = json_zip_vectors([radiation_vector], radiation_time_vector)
-        insolation_json = json_zip_vectors([insolation_vector], insolation_time_vector)
-        uv_json = json_zip_vectors([uv_vector], uv_time_vector)
-
         # put into a dictionary to return
-        search_list_extension = {'outTempWeekjson': outtemp_json,
-                                 'dewpointWeekjson': dewpoint_json,
-                                 'appTempWeekjson': apptemp_json,
-                                 'windchillWeekjson': windchill_json,
-                                 'heatindexWeekjson': heatindex_json,
-                                 'outHumidityWeekjson': outhumidity_json,
-                                 'barometerWeekjson': barometer_json,
-                                 'windSpeedWeekjson': windspeed_json,
-                                 'windGustWeekjson': windgust_json,
-                                 'windDirWeekjson': winddir_json,
-                                 'rainWeekjson': rain_json,
-                                 'radiationWeekjson': radiation_json,
-                                 'insolationWeekjson': insolation_json,
-                                 'uvWeekjson': uv_json,
-                                 'weekPlotStart': _start_ts * 1000,
+        search_list_extension = {'weekPlotStart': _start_ts * 1000,
                                  'weekPlotEnd': timespan.stop * 1000}
         t2 = time.time()
         if weewx.debug >= 2:
@@ -519,27 +372,6 @@ class HighchartsYear(HighchartsDaySummarySearchList):
     def __init__(self, generator):
         # initialize my base class:
         super(HighchartsYear, self).__init__(generator)
-
-        # Where do we get our appTemp data? WeeWX 4.0.0 introduced the
-        # wview_extended schema which contains field appTemp but it may or may
-        # not contain data. The default schema for WeeWX 3.x and earlier does
-        # not contain an appTemp field but a user may have added them. In
-        # addition 3rd party extensions such as WeeWX-WD can provide appTemp.
-        # To support obtaining appTemp data from databases other than the
-        # 'WeeWX' database we will support a config option under
-        # [StdReport][[Highcharts]] where the user can specify a binding for
-        # the database that contains appTemp.
-
-        # appTemp binding
-        if 'Extras' in generator.skin_dict:
-            apptemp_binding = generator.skin_dict['Extras'].get('apptemp_binding',
-                                                                'wx_binding')
-            # just in case apptemp_binding is included but not set
-            if apptemp_binding == '':
-                apptemp_binding = 'wx_binding'
-        else:
-            apptemp_binding = 'wx_binding'
-        self.apptemp_binding = apptemp_binding
 
     def get_extension_list(self, timespan, db_lookup):
         """Generate the JSON vectors and return as a list of dictionaries.
