@@ -895,7 +895,7 @@ def get_ago(dt, d_years=0, d_months=0):
 
 
 # ==============================================================================
-#                              class WdTimeSpanTags
+#                           class HighchartsSpans
 # ==============================================================================
 
 class HighchartsSpans(weewx.cheetahgenerator.SearchList):
