@@ -227,15 +227,15 @@ class HighchartsDaySummarySearchList(weewx.cheetahgenerator.SearchList):
 
 
 # ============================================================================
-#                          class HighchartsMinRanges
+#                              class Highcharts
 # ============================================================================
 
-class HighchartsMinRanges(weewx.cheetahgenerator.SearchList):
+class Highcharts(weewx.cheetahgenerator.SearchList):
     """SearchList to return y-axis minimum range values for each plot."""
 
     def __init__(self, generator):
         # initialize my base class:
-        super(HighchartsMinRanges, self).__init__(generator)
+        super(Highcharts, self).__init__(generator)
 
     def get_extension_list(self, timespan, db_lookup):
         """Obtain y-axis minimum range values as a list of dictionaries.
@@ -252,7 +252,56 @@ class HighchartsMinRanges(weewx.cheetahgenerator.SearchList):
 
         t1 = time.time()
 
-        mr_dict = {}
+        # get a dict to store our results in
+        results_dict = dict()
+
+        # 'week.json' start and stop timestamps
+
+        # Our period of interest is a seven day period but starting on a start
+        # of day boundary. Our stop ts is timespan.stop but we need to
+        # calculate the start ts
+
+        # first get the start of today
+        _ts = weeutil.weeutil.startOfDay(timespan.stop)
+        # get the start of today as a datetime object so we can do some
+        # daylight saving safe date arithmetic
+        _ts_dt = datetime.datetime.fromtimestamp(_ts)
+        # now go back seven days in a daylight saving safe manner
+        _start_dt = _ts_dt - datetime.timedelta(days=7)
+        # convert back to a timestamp in ms and save in our results
+        results_dict['weekPlotStart'] = time.mktime(_start_dt.timetuple()) * 1000
+        # week stop ts is simply timespan.stop in ms
+        results_dict['weekPlotEnd'] = timespan.stop * 1000
+
+        # 'year.json' start and stop timestamps
+
+        # Our period of interest is a year period but starting on a start of
+        # day boundary. Our stop ts is timespan.stop but we need to calculate
+        # the start ts
+
+        # our start time is one year ago from midnight at the start of today
+        # first get the start of today
+        _ts = weeutil.weeutil.startOfDay(timespan.stop)
+        # get that as a datetime object
+        _ts_dt = datetime.datetime.fromtimestamp(_ts)
+        # Now go back 1 year, ideally we would do some datetime arithmetic
+        # since it is daylight savings safe but we can't use years, only weeks,
+        # days, hours etc. Instead replace our year with the previous year and
+        # if we hit an invalid date (29 February should be the only one) then
+        # catch the exception and go back one year and one day instead.
+        try:
+            # replace the year with year-1
+            _start_dt = _ts_dt.replace(year=_ts_dt.year - 1)
+        except ValueError:
+            # we have an invalid date so go back one year and one day
+            _start_dt = _ts_dt.replace(year=_ts_dt.year - 1, day=_ts_dt.day - 1)
+        # convert back to a timestamp in ms and save in our results
+        results_dict['yearPlotStart'] = time.mktime(_start_dt.timetuple()) * 1000
+        # week stop ts is simply timespan.stop in ms
+        results_dict['yearPlotEnd'] = timespan.stop * 1000
+
+        # minimum range
+
         # get our MinRange config dict if it exists
         mr_config_dict = self.generator.skin_dict['Extras'].get('MinRange') \
             if 'Extras' in self.generator.skin_dict else None
@@ -276,144 +325,17 @@ class HighchartsMinRanges(weewx.cheetahgenerator.SearchList):
                         _range = float(_value)
                     except ValueError:
                         continue
-                mr_dict[_key + '_min_range'] = _range
+                results_dict[_key + '_min_range'] = _range
         t2 = time.time()
         if weewx.debug >= 2:
-            logdbg("HighchartsMinRanges SLE executed in %0.3f seconds" % (t2 - t1))
-        # return our data dict
-        return [mr_dict]
-
-
-# ============================================================================
-#                            class HighchartsWeek
-# ============================================================================
-
-class HighchartsWeek(weewx.cheetahgenerator.SearchList):
-    """SearchList to generate JSON vectors for Highcharts week plots."""
-
-    def __init__(self, generator):
-        # initialize my base class:
-        super(HighchartsWeek, self).__init__(generator)
-
-    def get_vector(self, db_manager, timespan, obs_type,
-                   aggregate_type=None, aggregate_interval=None):
-        """Get a data and timestamp vector for a given obs.
-
-        Returns two vectors. The first is the obs data vector and the second
-        is the timestamp vector in ms.
-        """
-
-        # get our vectors as ValueTuples, wrap in a try..except in case
-        # obs_type does not exist
-        try:
-            (t_start_vt, t_stop_vt, obs_vt) = weewx.xtypes.get_series(obs_type, timespan, db_manager,
-                                                                      aggregate_type=aggregate_type,
-                                                                      aggregate_interval=aggregate_interval)
-        except weewx.UnknownType:
-            logdbg("Unknown type '%s'" % obs_type)
-            return None, None
-        # convert our obs ValueTuple
-        obs_vt = self.generator.converter.convert(obs_vt)
-        # can't use ValueHelper so round our results manually
-        # first get the number of decimal points
-        round_places = int(self.generator.skin_dict['Units']['StringFormats'].get(obs_vt.unit, "1f")[-2])
-        # now do the rounding, our result is a vector
-        obs_rounded_vector = [round_none(x, round_places) for x in obs_vt.value]
-        # get our time vector in ms (Highcharts requirement)
-        t_ms_vector = [float(x) * 1000 for x in t_stop_vt.value]
-        # return our time and obs data vectors
-        return obs_rounded_vector, t_ms_vector
-
-    def get_extension_list(self, timespan, db_lookup):
-        """Generate the JSON vectors and return as a list of dictionaries.
-
-        Parameters:
-          timespan: An instance of weeutil.weeutil.TimeSpan. This will
-                    hold the start and stop times of the domain of
-                    valid times.
-
-          db_lookup: This is a function that, given a data binding
-                     as its only parameter, will return a database manager
-                     object.
-         """
-
-        t1 = time.time()
-
-        # Our period of interest is a seven day period but starting on a start
-        # of day boundary. Get a TimeSpan object covering this period.
-        # first get the start of today
-        _ts = weeutil.weeutil.startOfDay(timespan.stop)
-        # get the start of today as a datetime object so we can do some
-        # daylight saving safe date arithmetic
-        _ts_dt = datetime.datetime.fromtimestamp(_ts)
-        # now go back seven days in a daylight saving safe manner
-        _start_dt = _ts_dt - datetime.timedelta(days=7)
-        # and convert back to a timestamp
-        _start_ts = time.mktime(_start_dt.timetuple())
-
-        # put into a dictionary to return
-        search_list_extension = {'weekPlotStart': _start_ts * 1000,
-                                 'weekPlotEnd': timespan.stop * 1000}
-        t2 = time.time()
-        if weewx.debug >= 2:
-            logdbg("HighchartsWeek SLE executed in %0.3f seconds" % (t2 - t1))
-        # return our json data
-        return [search_list_extension]
-
-
-# ============================================================================
-#                            class HighchartsYear
-# ============================================================================
-
-class HighchartsYear(HighchartsDaySummarySearchList):
-    """SearchList to generate JSON vectors for Highcharts year plots."""
-
-    def __init__(self, generator):
-        # initialize my base class:
-        super(HighchartsYear, self).__init__(generator)
-
-    def get_extension_list(self, timespan, db_lookup):
-        """Generate the JSON vectors and return as a list of dictionaries.
-
-        Parameters:
-          timespan: An instance of weeutil.weeutil.TimeSpan. This will
-                    hold the start and stop times of the domain of
-                    valid times.
-
-          db_lookup: This is a function that, given a data binding
-                     as its only parameter, will return a database manager
-                     object.
-         """
-
-        t1 = time.time()
-
-        # our start time is one year ago from midnight at the start of today
-        # first get the start of today
-        _ts = weeutil.weeutil.startOfDay(timespan.stop)
-        # then go back 1 year
-        _ts_dt = datetime.datetime.fromtimestamp(_ts)
-        try:
-            _start_dt = _ts_dt.replace(year=_ts_dt.year-1)
-        except ValueError:
-            _start_dt = _ts_dt.replace(year=_ts_dt.year-1, day=_ts_dt.day-1)
-        _start_ts = time.mktime(_start_dt.timetuple())
-        t_span = TimeSpan(_start_ts, timespan.stop)
-
-        # put into a dictionary to return
-        search_list_extension = {'yearPlotStart': t_span.start * 1000,
-                                 'yearPlotEnd': t_span.stop * 1000}
-
-        t2 = time.time()
-        if weewx.debug >= 2:
-            logdbg("HighchartsYear SLE executed in %0.3f seconds" % (t2 - t1))
-        # return our json data
-        return [search_list_extension]
+            logdbg("Highcharts SLE executed in %0.3f seconds" % (t2 - t1))
+        # return our results dict
+        return [results_dict]
 
 
 # ============================================================================
 #                          class HighchartsWindRose
 # ============================================================================
-
 
 class HighchartsWindRose(HighchartsDaySummarySearchList):
     """SearchList to generate JSON vectors for Highcharts windrose plots."""
@@ -530,8 +452,8 @@ class HighchartsWindRose(HighchartsDaySummarySearchList):
             # get our wind direction vector
             t_span = TimeSpan(timespan.stop-period + 1, timespan.stop)
             (_x_vt, time_vec_dir_stop_vt, direction_vec_vt) = weewx.xtypes.get_series(self.dir,
-                                                                               t_span,
-                                                                               db_lookup())
+                                                                                      t_span,
+                                                                                      db_lookup())
         else:
             # get our vectors from daily summaries using custom getStatsVectors
             # get our data tuples for speed
