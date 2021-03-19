@@ -61,101 +61,132 @@ Revision History
 "timespan": {"start": $weekPlotStart, "stop": $weekPlotEnd},
 ##
 "temperatureplot": {"series":
-{"outTemp": {"name": "Temperature", "data": $last_seven_day.outTemp.series().json(time_series='start', time_unit='unix_epoch_ms')},
-"dewpoint": {"name": "Dew Point", "data": $last_seven_day.dewpoint.series().json(time_series='start', time_unit='unix_epoch_ms')},
-"appTemp": {"name": "Apparent Temperature", "data": $last_seven_day.appTemp.series().json(time_series='start', time_unit='unix_epoch_ms')}},
-"units": "$unit.label.outTemp"#slurp
-#if $varExists('$outTemp_min_range')
-, 
-"minRange": $outTemp_min_range},
+{"outTemp": {"name": "Temperature", "data": $last_seven_day.outTemp.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')},
+"dewpoint": {"name": "Dew Point", "data": $last_seven_day.dewpoint.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')},
+"appTemp": {"name": "Apparent Temperature", "data": $last_seven_day.appTemp.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')}},
+"yAxisLabel": {"text": #slurp
+#if $unit.unit_type_dict.group_temperature == "degree_C"
+ "(\u00B0 C)"
 #else
-},
+ "(\u00B0 F)"
 #end if
+},
+"units": #slurp
+#if $unit.unit_type_dict.group_temperature == "degree_C"
+ "\u00B0 C"
+#else
+ "\u00B0 F"
+#end if
+},
 ##
 "windchillplot": {"series":
 {#slurp
-"appTemp": {"name": "Apparent Temperature", "data": $last_seven_day.appTemp.series().json(time_series='start', time_unit='unix_epoch_ms')},
-"windchill": {"name": "Wind Chill", "data": $last_seven_day.windchill.series().json(time_series='start', time_unit='unix_epoch_ms')},
-"heatindex": {"name": "Heat Index", "data": $last_seven_day.heatindex.series().json(time_series='start', time_unit='unix_epoch_ms')}},
-"units": "$unit.label.windchill"#slurp
-#if $varExists('$outTemp_min_range')
-, 
-"minRange": $outTemp_min_range},
+"appTemp": {"name": "Apparent Temperature", "data": $last_seven_day.appTemp.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')},
+"windchill": {"name": "Wind Chill", "data": $last_seven_day.windchill.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')},
+"heatindex": {"name": "Heat Index", "data": $last_seven_day.heatindex.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')}},
+"yAxisLabel": {"text": #slurp
+#if $unit.unit_type_dict.group_temperature == "degree_C"
+ "(\u00B0 C)"
 #else
-},
+ "(\u00B0 F)"
 #end if
+},
+"units": #slurp
+#if $unit.unit_type_dict.group_temperature == "degree_C"
+ "\u00B0 C"
+#else
+ "\u00B0 F"
+#end if
+},
 ##
 "humidityplot": {"series":
-{"outHumidity": {"name": "Humidity", "data": $last_seven_day.outHumidity.series().json(time_series='start', time_unit='unix_epoch_ms')}},
-"units": "$unit.label.outHumidity"#slurp
-#if $varExists('$outHumidity_min_range')
-, 
-"minRange": $outHumidity_min_range},
-#else
+{"outHumidity": {"name": "Humidity", "data": $last_seven_day.outHumidity.series().json(ndigits=0, time_series='start', time_unit='unix_epoch_ms')}}
 },
-#end if
 ##
 "barometerplot": {"series":
-{"barometer": {"name": "Barometer", "data": $last_seven_day.barometer.series().json(time_series='start', time_unit='unix_epoch_ms')}},
-"units": "$unit.label.barometer"#slurp
-#if $varExists('$barometer_min_range')
-, 
-"minRange": $barometer_min_range},
+{"barometer": {"name": "Barometer", "data": $last_seven_day.barometer.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')}},
+"yAxisLabel": {"text": #slurp
+#if $unit.unit_type_dict.group_pressure == "hPa"
+ "(hPa)"
+#elif $unit.unit_type_dict.group_pressure == "inHg"
+ "(inHg)"
+#elif $unit.unit_type_dict.group_pressure == "mmHg"
+ "(mmHg)"
 #else
-},
+ "(mbar)"
 #end if
+},
+"units": #slurp
+#if $unit.unit_type_dict.group_pressure == "hPa"
+ "hPa"
+#elif $unit.unit_type_dict.group_pressure == "inHg"
+ "inHg"
+#elif $unit.unit_type_dict.group_pressure == "mmHg"
+ "mmHg"
+#else
+ "mbar"
+#end if
+},
 ##
 "windplot": {"series":
-{"windSpeed": {"name": "Wind Speed", "data": $last_seven_day.windSpeed.series().json(time_series='start', time_unit='unix_epoch_ms')},
-"windGust": {"name": "Wind Gust", "data": $last_seven_day.windGust.series().json(time_series='start', time_unit='unix_epoch_ms')}},
-"units": "$unit.label.windSpeed"#slurp
-#if $varExists('$windSpeed_min_range')
-, 
-"minRange": $windSpeed_min_range},
+{"windSpeed": {"name": "Wind Speed", "data": $last_seven_day.windSpeed.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')},
+"windGust": {"name": "Wind Gust", "data": $last_seven_day.windGust.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')}},
+"yAxisLabel": {"text": #slurp
+#if $unit.unit_type_dict.group_speed == "km_per_hour"
+ "(km/h)"
+#elif $unit.unit_type_dict.group_speed == "mile_per_hour"
+ "(mph)"
+#elif $unit.unit_type_dict.group_speed == "meter_per_second"
+ "(m/s)"
 #else
-},
+ "(knots)"
 #end if
+},
+"units": #slurp
+#if $unit.unit_type_dict.group_speed == "km_per_hour"
+ "km/h"
+#elif $unit.unit_type_dict.group_speed == "mile_per_hour"
+ "mph"
+#elif $unit.unit_type_dict.group_speed == "meter_per_second"
+ "m/s"
+#else
+ "knots"
+#end if
+},
 ##
 "winddirplot": {"series":
-{"windDir": {"name": "Wind Direction", "data": $last_seven_day.windDir.series().json(time_series='start', time_unit='unix_epoch_ms')}},
-"units": "$unit.label.windDir"#slurp
-#if $varExists('$windDir_min_range')
-, 
-"minRange": $windDir_min_range},
-#else
+{"windDir": {"name": "Wind Direction", "data": $last_seven_day.windDir.series().json(ndigits=0, time_series='start', time_unit='unix_epoch_ms')}}
 },
-#end if
 ##
 "rainplot": {"series":
-{"rain": {"name": "Rainfall", "data": $last_seven_day.rain.series(aggregation_type='sum', aggregation_interval=3600).json(time_series='start', time_unit='unix_epoch_ms')}},
-"units": "$unit.label.rain"#slurp
-#if $varExists('$rain_min_range')
-, 
-"minRange": $rain_min_range},
+{"rain": {"name": "Rainfall", "data": $last_seven_day.rain.series(aggregation_type='sum', aggregation_interval=3600).json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')}},
+"yAxisLabel": {"text": #slurp
+#if $unit.unit_type_dict.group_rain == "mm"
+ "(mm)"
+#elif $unit.unit_type_dict.group_rain == "inch"
+ "(in)"
 #else
-},
+ "(cm)"
 #end if
+},
+"units": #slurp
+#if $unit.unit_type_dict.group_rain == "mm"
+ "mm"
+#elif $unit.unit_type_dict.group_rain == "inch"
+ "in"
+#else
+ "cm"
+#end if
+},
 ##
 "radiationplot": {"series":
-{"radiation": {"name": "Solar Radiation", "data": $last_seven_day.radiation.series().json(time_series='start', time_unit='unix_epoch_ms')},
-"insolation": {"name": "Theoretical Max Solar Radiation", "data": $last_seven_day.maxSolarRad.series().json(time_series='start', time_unit='unix_epoch_ms')}},
-"units": "$unit.label.radiation"#slurp
-#if $varExists('$radiation_min_range')
-, 
-"minRange": $radiation_min_range},
-#else
+{"radiation": {"name": "Solar Radiation", "data": $last_seven_day.radiation.series().json(ndigits=0, time_series='start', time_unit='unix_epoch_ms')},
+"insolation": {"name": "Theoretical Max Solar Radiation", "data": $last_seven_day.maxSolarRad.series().json(ndigits=0, time_series='start', time_unit='unix_epoch_ms')}}
 },
-#end if
 ##
 "uvplot": {"series":
-{"uv": {"name": "UV Index", "data": $last_seven_day.UV.series().json(time_series='start', time_unit='unix_epoch_ms')}},
-"units": "$unit.label.UV"#slurp
-#if $varExists('$UV_min_range')
-, 
-"minRange": $UV_min_range},
-#else
+{"uv": {"name": "UV Index", "data": $last_seven_day.UV.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')}}
 },
-#end if
 ##
 "windroseDay": {#slurp
 "series": $wr86400['windrosejson'],
