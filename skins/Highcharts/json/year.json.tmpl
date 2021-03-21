@@ -62,9 +62,8 @@ Revision History
 ## Setup temperature plot vectors
 #set $min = $last_year.outTemp.series(aggregation_type='min', aggregation_interval='day')
 #set $max = $last_year.outTemp.series(aggregation_type='max', aggregation_interval='day')
-#set $min_max_json = json.dumps(list(zip($min.start.unix_epoch_ms.raw,*[$min.data.raw, $max.data.raw])))
 "temperatureplot": {
-"outTempminmax": $min_max_json,
+"outTempminmax": $jsonize($zip($min.start.unix_epoch_ms.raw, $min.data.raw(ndigits=1), $max.data.raw(ndigits=1))),
 "outTempaverage": $last_year.outTemp.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.outTemp"#slurp
 #if $varExists('$outTemp_min_range')
@@ -76,9 +75,8 @@ Revision History
 ## Setup windchill plot vectors
 #set $min = $last_year.appTemp.series(aggregation_type='min', aggregation_interval='day')
 #set $max = $last_year.appTemp.series(aggregation_type='max', aggregation_interval='day')
-#set $min_max_json = json.dumps(list(zip($min.start.unix_epoch_ms.raw,*[$min.data.raw,$max.data.raw])))
 "windchillplot": {
-"appTempminmax": $min_max_json,
+"appTempminmax": $jsonize($zip($min.start.unix_epoch_ms.raw, $min.data.raw(1), $max.data.raw(1))),
 "appTempaverage": $last_year.appTemp.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
 "windchillaverage": $last_year.windchill.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
 "heatindexaverage": $last_year.heatindex.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
@@ -92,9 +90,8 @@ Revision History
 ## Setup humidity plot vectors
 #set $min = $last_year.outHumidity.series(aggregation_type='min', aggregation_interval='day')
 #set $max = $last_year.outHumidity.series(aggregation_type='max', aggregation_interval='day')
-#set $min_max_json = json.dumps(list(zip($min.start.unix_epoch_ms.raw,*[$min.data.raw,$max.data.raw])))
 "humidityplot": {
-"outHumidityminmax": $min_max_json,
+"outHumidityminmax": $jsonize($zip($min.start.unix_epoch_ms.raw, $min.data.raw(0), $max.data.raw(0))),
 "outHumidityaverage": $last_year.outHumidity.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=0, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.outHumidity"#slurp
 #if $varExists('$outHumidity_min_range')
@@ -106,9 +103,8 @@ Revision History
 ## Setup barometer plot vectors
 #set $min = $last_year.barometer.series(aggregation_type='min', aggregation_interval='day')
 #set $max = $last_year.barometer.series(aggregation_type='max', aggregation_interval='day')
-#set $min_max_json = json.dumps(list(zip($min.start.unix_epoch_ms.raw,*[$min.data.raw,$max.data.raw])))
 "barometerplot": {
-"barometerminmax": $min_max_json,
+"barometerminmax": $jsonize($zip($min.start.unix_epoch_ms.raw, $min.data.raw(1), $max.data.raw(1))),
 "barometeraverage": $last_year.barometer.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.barometer"#slurp
 #if $varExists('$barometer_min_range')
