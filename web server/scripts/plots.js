@@ -50,6 +50,8 @@ Revision History
             than direct in code
         -   reworked y axis titles such that they are obtained from the
             incoming json data
+        -   changed year radiation plot to spline only rather than bar and
+            spline hybrid
     20 September 2020   v0.6.0
         - version number change only
     4 September 2018    v0.5.2
