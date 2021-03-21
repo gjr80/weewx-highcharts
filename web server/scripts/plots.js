@@ -1,8 +1,7 @@
 /*****************************************************************************
+plots.js
 
-v0.3.0                                          Last Update: 20 September 2020
-
-Javascript to setup, configure and display Highcharts plots of weewx weather
+Javascript to setup, configure and display Highcharts plots of WeeWX weather
 data.
 
 Based on Highcharts documentation and examples, and a lot of Stackoverflow
@@ -16,16 +15,16 @@ Key points:
         Highstocks columnrange plot with a zoomable window (default 1 month).
         Plots show day min/max range in a column and day averages in one or
         more spline plots.
-    -   requires JSON data feed from Highcharts for weewx extension
+    -   requires JSON data feed from Highcharts for WeeWX extension
     -   requires Highstocks
-    -   units of measure are set in Highcharts for weewx supplied through the
+    -   units of measure are set in Highcharts for WeeWX supplied through the
         JSON data files
 
 To install/setup:
-    -   install Highcharts for weewx extension and confirm proper generation
+    -   install Highcharts for WeeWX extension and confirm proper generation
         of week and year JSON data files
     -   arrange for JSON data files to be transferred to your web server
-        either by weewx or some other arrangement
+        either by WeeWX or some other arrangement
     -   copy saratogaplots.js and weewxtheme.js to a suitable directory on your
         web server (the default directory used throughout is
         saratoga/scripts/js - remember this is relative to the root directory
@@ -43,15 +42,33 @@ To install/setup:
     -   once the default setup is working you may customise the display by
         changing the plot settings in this file and weewxtheme.js
 
-History
-    v0.3.0      20 September 2020
+Version: 0.3.0                                      Date: 21 March 2021
+
+Revision History
+    21 March 2021       v0.7.0
+        -   div ids and json path/file name now specified in variables rather
+            than direct in code
+        -   reworked y axis titles such that they are obtained from the
+            incoming json data
+    20 September 2020   v0.6.0
         - version number change only
-    v0.2.2      4 September 2018
+    4 September 2018    v0.5.2
         - version number change only
-    v0.2.0      4 May 2017
+    4 May 2017          v0.5.0
         - ignores appTemp and insolation plots if no relevant data is available
-    v0.1.0      22 November 2016
-        - initial implementation
+    10 May 2016         v0.4.0
+        -   fixed issue whereby x axis timescale was displayed using the local
+            time of the system viewing the plot rather than the the weather
+            station local time
+        - revised comments
+    17 March 2015       v0.3.0
+        -   completely rewritten/restructured to plot week and year plots only
+            rather than original day, week, month and year plots
+    17 January 2015     v0.2.0
+        -   tweaked tooltips
+        -   added theoretical max solar radiation plot to solar radiation plot
+    sometime in 2014    v0.1.0
+        -   initial implementation
 
 *****************************************************************************/
 
@@ -79,8 +96,8 @@ Set paths/names of our week and year JSON data files
 Paths are relative to the web server root
 
 *****************************************************************************/
-var week_json = '../json/week.json';
-var year_json = '../json/year.json';
+var week_json = '/weather_data/json/week.json';
+var year_json = '/weather_data/json/year.json';
 
 /*****************************************************************************
 
@@ -728,7 +745,6 @@ plots
     };
     obj.tooltip.headerFormat = '<span style="font-size: 10px">{point.key}</span><br/>'
     obj.tooltip.pointFormat = '<span style="color: {series.color}">●</span> {series.name}: <b>{point.y}</b>'
-    obj.tooltip.valueSuffix = '\u00B0'
     obj.tooltip.xDateFormat = '%e %B %Y %H:%M';
     return obj
 };
@@ -847,22 +863,21 @@ plots
 function setRadiationStock(obj) {
 /*****************************************************************************
 
-Function to add/set various plot options specific to combined columnrange
-spline solar radiation plots
+Function to add/set various plot options specific to spline solar radiation
+plots
 
 *****************************************************************************/
     obj = setRadiation(obj);
     obj.chart.type = 'column';
     obj.series = [{
         name: 'Maximum Solar Radiation',
-        type: 'column',
+        type: 'spline',
         color: '#F0B0B0',
     }, {
         name: 'Average Solar Radiation',
         type: 'spline',
         color: '#B44242',
     }];
-    obj.tooltip.valueSuffix = 'W/m\u00B2';
     return obj
 };
 
@@ -946,30 +961,6 @@ Function to add/set various plot options and then plot each week plot
     var optionsRadiation = clone(commonOptions);
     optionsRadiation = addWeekOptions(optionsRadiation);
     optionsRadiation = setRadiation(optionsRadiation);
-    optionsRadiation.tooltip.formatter = function() {
-        var order = [], i, j, temp = [],
-            points = this.points;
-
-        for(i=0; i<points.length; i++)
-        {
-            j=0;
-            if( order.length )
-            {
-                while( points[order[j]] && points[order[j]].y > points[i].y )
-                    j++;
-            }
-            temp = order.splice(0, j);
-            temp.push(i);
-            order = temp.concat(order);
-        }
-        console.log(order);
-        temp = '<span style="font-size: 10px">' + Highcharts.dateFormat('%e %B %Y %H:%M',new Date(this.x)) + '</span><br/>';
-        $(order).each(function(i,j){
-            temp += '<span style="color: '+points[j].series.color+'">' +
-                points[j].series.name + ': ' + points[j].y + 'W/m\u00B2</span><br/>';
-        });
-        return temp;
-    };
     var optionsUv = clone(commonOptions);
     optionsUv = addWeekOptions(optionsUv);
     optionsUv = setUv(optionsUv);
@@ -1021,6 +1012,7 @@ Function to add/set various plot options and then plot each week plot
         optionsWindDir.yAxis.title.text = "(" + seriesData[0].winddirplot.units + ")";
         optionsWindDir.xAxis.min = seriesData[0].timespan.start;
         optionsWindDir.xAxis.max = seriesData[0].timespan.stop;
+        optionsWindDir.tooltip.valueSuffix = seriesData[0].winddirplot.units;
         optionsRain.series[0] = seriesData[0].rainplot.series.rain;
         optionsRain.yAxis.minRange = seriesData[0].rainplot.minRange;
         optionsRain.yAxis.title.text = "(" + seriesData[0].rainplot.units + ")";
@@ -1034,6 +1026,30 @@ Function to add/set various plot options and then plot each week plot
         optionsRadiation.yAxis.title.text = "(" + seriesData[0].radiationplot.units + ")";
         optionsRadiation.xAxis.min = seriesData[0].timespan.start;
         optionsRadiation.xAxis.max = seriesData[0].timespan.stop;
+        optionsRadiation.tooltip.formatter = function() {
+            var order = [], i, j, temp = [],
+                points = this.points;
+
+            for(i=0; i<points.length; i++)
+            {
+                j=0;
+                if( order.length )
+                {
+                    while( points[order[j]] && points[order[j]].y > points[i].y )
+                        j++;
+                }
+                temp = order.splice(0, j);
+                temp.push(i);
+                order = temp.concat(order);
+            }
+            console.log(order);
+            temp = '<span style="font-size: 10px">' + Highcharts.dateFormat('%e %B %Y %H:%M',new Date(this.x)) + '</span><br/>';
+            $(order).each(function(i,j){
+                temp += '<span style="color: '+points[j].series.color+'">' +
+                    points[j].series.name + ': ' + points[j].y + seriesData[0].radiationplot.units + '</span><br/>';
+            });
+            return temp;
+        };
         optionsUv.series[0] = seriesData[0].uvplot.series.uv;
         optionsUv.yAxis.minRange = seriesData[0].uvplot.minRange;
         optionsUv.yAxis.title.text = "(" + seriesData[0].uvplot.units + ")";
@@ -1181,6 +1197,30 @@ Function to add/set various plot options and then plot each year plot
         optionsRadiation.yAxis.title.text = "(" + seriesData[0].radiationplot.units + ")";
         optionsRadiation.xAxis.min = seriesData[0].timespan.start;
         optionsRadiation.xAxis.max = seriesData[0].timespan.stop;
+        optionsRadiation.tooltip.formatter = function() {
+            var order = [], i, j, temp = [],
+                points = this.points;
+
+            for(i=0; i<points.length; i++)
+            {
+                j=0;
+                if( order.length )
+                {
+                    while( points[order[j]] && points[order[j]].y > points[i].y )
+                        j++;
+                }
+                temp = order.splice(0, j);
+                temp.push(i);
+                order = temp.concat(order);
+            }
+            console.log(order);
+            temp = '<span style="font-size: 10px">' + Highcharts.dateFormat('%e %B %Y %H:%M',new Date(this.x)) + '</span><br/>';
+            $(order).each(function(i,j){
+                temp += '<span style="color: '+points[j].series.color+'">' +
+                    points[j].series.name + ': ' + points[j].y + seriesData[0].radiationplot.units + '</span><br/>';
+            });
+            return temp;
+        };
         optionsUv.series[0].data = seriesData[0].uvplot.uvmax;
         optionsUv.series[1].data = seriesData[0].uvplot.uvaverage;
         optionsUv.yAxis.minRange = seriesData[0].uvplot.minRange;
