@@ -99,7 +99,7 @@ Revision History
 },
 ##
 "rainplot": {"series":
-{"rain": {"name": "Rainfall", "data": $last_seven_day.rain.series(aggregation_type='sum', aggregation_interval=3600).json(ndigits=1, time_series='stop', time_unit='unix_epoch_ms')}},
+{"rain": {"name": "Rainfall", "data": $last_seven_day.rain.series(aggregate_type='sum', aggregate_interval=3600).json(ndigits=1, time_series='stop', time_unit='unix_epoch_ms')}},
 "units": "$unit.label.rain"#slurp
 },
 ##

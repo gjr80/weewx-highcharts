@@ -60,11 +60,11 @@ Revision History
 "utcoffset": $utcOffset, 
 "timespan": {"start": $yearPlotStart, "stop": $yearPlotEnd}, 
 ## Setup temperature plot vectors
-#set $min = $last_year.outTemp.series(aggregation_type='min', aggregation_interval='day')
-#set $max = $last_year.outTemp.series(aggregation_type='max', aggregation_interval='day')
+#set $min = $last_year.outTemp.series(aggregate_type='min', aggregate_interval='day')
+#set $max = $last_year.outTemp.series(aggregate_type='max', aggregate_interval='day')
 "temperatureplot": {
 "outTempminmax": $jsonize($zip($min.start.unix_epoch_ms.raw, $rnd($min.data.raw, 1), $rnd($max.data.raw, 1))),
-"outTempaverage": $last_year.outTemp.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"outTempaverage": $last_year.outTemp.series(aggregate_type='avg', aggregate_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.outTemp"#slurp
 #if $varExists('$outTemp_min_range')
 , 
@@ -73,13 +73,13 @@ Revision History
 }, 
 #end if
 ## Setup windchill plot vectors
-#set $min = $last_year.appTemp.series(aggregation_type='min', aggregation_interval='day')
-#set $max = $last_year.appTemp.series(aggregation_type='max', aggregation_interval='day')
+#set $min = $last_year.appTemp.series(aggregate_type='min', aggregate_interval='day')
+#set $max = $last_year.appTemp.series(aggregate_type='max', aggregate_interval='day')
 "windchillplot": {
 "appTempminmax": $jsonize($zip($min.start.unix_epoch_ms.raw, $rnd($min.data.raw, 1), $rnd($max.data.raw, 1))),
-"appTempaverage": $last_year.appTemp.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
-"windchillaverage": $last_year.windchill.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
-"heatindexaverage": $last_year.heatindex.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"appTempaverage": $last_year.appTemp.series(aggregate_type='avg', aggregate_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"windchillaverage": $last_year.windchill.series(aggregate_type='avg', aggregate_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"heatindexaverage": $last_year.heatindex.series(aggregate_type='avg', aggregate_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.outTemp"#slurp
 #if $varExists('$outTemp_min_range')
 , 
@@ -88,11 +88,11 @@ Revision History
 }, 
 #end if
 ## Setup humidity plot vectors
-#set $min = $last_year.outHumidity.series(aggregation_type='min', aggregation_interval='day')
-#set $max = $last_year.outHumidity.series(aggregation_type='max', aggregation_interval='day')
+#set $min = $last_year.outHumidity.series(aggregate_type='min', aggregate_interval='day')
+#set $max = $last_year.outHumidity.series(aggregate_type='max', aggregate_interval='day')
 "humidityplot": {
 "outHumidityminmax": $jsonize($zip($min.start.unix_epoch_ms.raw, $rnd($min.data.raw, 0), $rnd($max.data.raw, 0))),
-"outHumidityaverage": $last_year.outHumidity.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=0, time_series='start', time_unit='unix_epoch_ms'),
+"outHumidityaverage": $last_year.outHumidity.series(aggregate_type='avg', aggregate_interval='day').json(ndigits=0, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.outHumidity"#slurp
 #if $varExists('$outHumidity_min_range')
 , 
@@ -101,11 +101,11 @@ Revision History
 }, 
 #end if
 ## Setup barometer plot vectors
-#set $min = $last_year.barometer.series(aggregation_type='min', aggregation_interval='day')
-#set $max = $last_year.barometer.series(aggregation_type='max', aggregation_interval='day')
+#set $min = $last_year.barometer.series(aggregate_type='min', aggregate_interval='day')
+#set $max = $last_year.barometer.series(aggregate_type='max', aggregate_interval='day')
 "barometerplot": {
 "barometerminmax": $jsonize($zip($min.start.unix_epoch_ms.raw, $rnd($min.data.raw, 1), $rnd($max.data.raw, 1))),
-"barometeraverage": $last_year.barometer.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"barometeraverage": $last_year.barometer.series(aggregate_type='avg', aggregate_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.barometer"#slurp
 #if $varExists('$barometer_min_range')
 , 
@@ -114,10 +114,10 @@ Revision History
 }, 
 #end if
 "windplot": {
-"windmax": $last_year.windGust.series(aggregation_type='max', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
-"windaverage": $last_year.windvec.series(aggregation_type='avg', aggregation_interval='day').magnitude.json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
-"windAvmax": $last_year.windSpeed.series(aggregation_type='max', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
-"windAverage": $last_year.windSpeed.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"windmax": $last_year.windGust.series(aggregate_type='max', aggregate_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"windaverage": $last_year.windvec.series(aggregate_type='avg', aggregate_interval='day').magnitude.json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"windAvmax": $last_year.windSpeed.series(aggregate_type='max', aggregate_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"windAverage": $last_year.windSpeed.series(aggregate_type='avg', aggregate_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.windSpeed"#slurp
 #if $varExists('$windSpeed_min_range')
 , 
@@ -125,7 +125,7 @@ Revision History
 #else
 }, 
 #end if
-"winddirplot": {"windDir": $last_year.windvec.series(aggregation_type='avg', aggregation_interval='day').direction.json(ndigits=0, time_series='start', time_unit='unix_epoch_ms'),
+"winddirplot": {"windDir": $last_year.windvec.series(aggregate_type='avg', aggregate_interval='day').direction.json(ndigits=0, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.windDir"#slurp
 #if $varExists('$windDir_min_range')
 , 
@@ -134,7 +134,7 @@ Revision History
 }, 
 #end if
 "rainplot": {
-"rainsum": $last_year.rain.series(aggregation_type='sum', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"rainsum": $last_year.rain.series(aggregate_type='sum', aggregate_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.rain"#slurp
 #if $varExists('$rain_min_range')
 , 
@@ -143,8 +143,8 @@ Revision History
 }, 
 #end if
 "radiationplot": {
-"radiationmax": $last_year.radiation.series(aggregation_type='max', aggregation_interval='day').json(ndigits=0, time_series='start', time_unit='unix_epoch_ms'),
-"radiationaverage": $last_year.radiation.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=0, time_series='start', time_unit='unix_epoch_ms'),
+"radiationmax": $last_year.radiation.series(aggregate_type='max', aggregate_interval='day').json(ndigits=0, time_series='start', time_unit='unix_epoch_ms'),
+"radiationaverage": $last_year.radiation.series(aggregate_type='avg', aggregate_interval='day').json(ndigits=0, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.radiation"#slurp
 #if $varExists('$radiation_min_range')
 , 
@@ -153,8 +153,8 @@ Revision History
 }, 
 #end if
 "uvplot": {
-"uvmax": $last_year.UV.series(aggregation_type='max', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
-"uvaverage": $last_year.UV.series(aggregation_type='avg', aggregation_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"uvmax": $last_year.UV.series(aggregate_type='max', aggregate_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
+"uvaverage": $last_year.UV.series(aggregate_type='avg', aggregate_interval='day').json(ndigits=1, time_series='start', time_unit='unix_epoch_ms'),
 "units": "$unit.label.uv"#slurp
 #if $varExists('$UV_min_range')
 , 
