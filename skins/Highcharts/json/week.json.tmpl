@@ -63,54 +63,54 @@ Revision History
 "timespan": {"start": $weekPlotStart, "stop": $weekPlotEnd},
 ##
 "temperatureplot": {"series":
-{"outTemp": {"name": "Temperature", "data": $last_seven_day.outTemp.series().json(ndigits=1, time_series='stop', time_unit='unix_epoch_ms')},
-"dewpoint": {"name": "Dew Point", "data": $last_seven_day.dewpoint.series().json(ndigits=1, time_series='stop', time_unit='unix_epoch_ms')},
-"appTemp": {"name": "Apparent Temperature", "data": $last_seven_day.appTemp.series().json(ndigits=1, time_series='stop', time_unit='unix_epoch_ms')}},
+{"outTemp": {"name": "Temperature", "data": $last_seven_day.outTemp.series(time_series='stop', time_unit='unix_epoch_ms').round(1).json},
+"dewpoint": {"name": "Dew Point", "data": $last_seven_day.dewpoint.series(time_series='stop', time_unit='unix_epoch_ms').round(1).json},
+"appTemp": {"name": "Apparent Temperature", "data": $last_seven_day.appTemp.series(time_series='stop', time_unit='unix_epoch_ms').round(1).json}},
 "units": "$unit.label.outTemp"#slurp
 },
 ##
 "windchillplot": {"series":
 {#slurp
-"appTemp": {"name": "Apparent Temperature", "data": $last_seven_day.appTemp.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')},
-"windchill": {"name": "Wind Chill", "data": $last_seven_day.windchill.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')},
-"heatindex": {"name": "Heat Index", "data": $last_seven_day.heatindex.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')}},
+"appTemp": {"name": "Apparent Temperature", "data": $last_seven_day.appTemp.series(time_series='stop', time_unit='unix_epoch_ms').round(1).json},
+"windchill": {"name": "Wind Chill", "data": $last_seven_day.windchill.series(time_series='stop', time_unit='unix_epoch_ms').round(1).json},
+"heatindex": {"name": "Heat Index", "data": $last_seven_day.heatindex.series(time_series='stop', time_unit='unix_epoch_ms').round(1).json}},
 "units": "$unit.label.appTemp"#slurp
 },
 ##
 "humidityplot": {"series":
-{"outHumidity": {"name": "Humidity", "data": $last_seven_day.outHumidity.series().json(ndigits=0, time_series='start', time_unit='unix_epoch_ms')}},
+{"outHumidity": {"name": "Humidity", "data": $last_seven_day.outHumidity.series(time_series='stop', time_unit='unix_epoch_ms').round(0).json}},
 "units": "$unit.label.outHumidity"#slurp
 },
 ##
 "barometerplot": {"series":
-{"barometer": {"name": "Barometer", "data": $last_seven_day.barometer.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')}},
+{"barometer": {"name": "Barometer", "data": $last_seven_day.barometer.series(time_series='stop', time_unit='unix_epoch_ms').round(1).json}},
 "units": "$unit.label.barometer"#slurp
 },
 ##
 "windplot": {"series":
-{"windSpeed": {"name": "Wind Speed", "data": $last_seven_day.windSpeed.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')},
-"windGust": {"name": "Wind Gust", "data": $last_seven_day.windGust.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')}},
+{"windSpeed": {"name": "Wind Speed", "data": $last_seven_day.windSpeed.series(time_series='stop', time_unit='unix_epoch_ms').round(1).json},
+"windGust": {"name": "Wind Gust", "data": $last_seven_day.windGust.series(time_series='stop', time_unit='unix_epoch_ms').round(1).json}},
 "units": "$unit.label.windSpeed"#slurp
 },
 ##
 "winddirplot": {"series":
-{"windDir": {"name": "Wind Direction", "data": $last_seven_day.windDir.series().json(ndigits=0, time_series='start', time_unit='unix_epoch_ms')}},
+{"windDir": {"name": "Wind Direction", "data": $last_seven_day.windDir.series(time_series='stop', time_unit='unix_epoch_ms').round(0).json}},
 "units": "$unit.label.windDir"#slurp
 },
 ##
 "rainplot": {"series":
-{"rain": {"name": "Rainfall", "data": $last_seven_day.rain.series(aggregate_type='sum', aggregate_interval=3600).json(ndigits=1, time_series='stop', time_unit='unix_epoch_ms')}},
+{"rain": {"name": "Rainfall", "data": $last_seven_day.rain.series(aggregate_type='sum', aggregate_interval=3600, time_series='stop', time_unit='unix_epoch_ms').round(1).json}},
 "units": "$unit.label.rain"#slurp
 },
 ##
 "radiationplot": {"series":
-{"radiation": {"name": "Solar Radiation", "data": $last_seven_day.radiation.series().json(ndigits=0, time_series='start', time_unit='unix_epoch_ms')},
-"insolation": {"name": "Theoretical Max Solar Radiation", "data": $last_seven_day.maxSolarRad.series().json(ndigits=0, time_series='start', time_unit='unix_epoch_ms')}},
+{"radiation": {"name": "Solar Radiation", "data": $last_seven_day.radiation.series(time_series='stop', time_unit='unix_epoch_ms').round(0).json},
+"insolation": {"name": "Theoretical Max Solar Radiation", "data": $last_seven_day.maxSolarRad.series(time_series='stop', time_unit='unix_epoch_ms').round(0).json}},
 "units": "$unit.label.radiation"#slurp
 },
 ##
 "uvplot": {"series":
-{"uv": {"name": "UV Index", "data": $last_seven_day.UV.series().json(ndigits=1, time_series='start', time_unit='unix_epoch_ms')}},
+{"uv": {"name": "UV Index", "data": $last_seven_day.UV.series(time_series='stop', time_unit='unix_epoch_ms').round(1).json}},
 "units": "$unit.label.UV"#slurp
 },
 ##
