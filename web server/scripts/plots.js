@@ -42,9 +42,12 @@ To install/setup:
     -   once the default setup is working you may customise the display by
         changing the plot settings in this file and weewxtheme.js
 
-Version: 0.3.0                                      Date: 21 March 2021
+Version: 0.7.1                                      Date: 30 March 2021
 
 Revision History
+    30 March 2021       v0.7.1
+        -   fixed incorrect number of decimal places appearing in humidity and
+            wind direction year plot tooltip values
     21 March 2021       v0.7.0
         -   div ids and json path/file name now specified in variables rather
             than direct in code
@@ -602,7 +605,7 @@ humidity spline plots
         type: 'spline',
         visible: true
     }];
-    obj.tooltip.valueDecimals = 1;
+    obj.tooltip.valueDecimals = 0;
     return obj
 };
 
@@ -766,7 +769,7 @@ spline wind direction plots
         name: 'Vector Average Wind Direction',
         color: '#439BB6'
     }];
-    obj.tooltip.valueDecimals = 1;
+    obj.tooltip.valueDecimals = 0;
     obj.tooltip.xDateFormat = '%e %B %Y';
     return obj
 };
