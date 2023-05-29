@@ -45,6 +45,8 @@ from weeutil.weeutil import TimeSpan, option_as_list
 
 log = logging.getLogger(__name__)
 
+VERSION = '0.4.0a1'
+
 
 class HighchartsGenerator(weewx.reportengine.ReportGenerator):
     """Class for generating data files for use with Highcharts."""
@@ -55,6 +57,7 @@ class HighchartsGenerator(weewx.reportengine.ReportGenerator):
         # initialize my superclass
         super(HighchartsGenerator, self).__init__(self, config_dict, skin_dict, *args, **kwargs)
         self.generic_dict = dict()
+
 
     def run(self):
         """Main entry point."""
@@ -81,6 +84,10 @@ class HighchartsGenerator(weewx.reportengine.ReportGenerator):
                                                     self.skin_dict['skin'])
         # ensure that we are in a consistent right location
         os.chdir(self.charts_dict['skin_dir'])
+        # get UTC offset
+        time_struct = time.localtime(time.time())
+        self.utc_offset = (calendar.timegm(time_struct) - calendar.timegm(time.gmtime(time.mktime(time_struct))))/60
+
 
     def gen_files(self, gen_ts):
         """Generate the Highcharts data files.
@@ -153,6 +160,10 @@ class HighchartsGenerator(weewx.reportengine.ReportGenerator):
                                                  self.charts_dict[chart_group][chart_name])
                 if chart_data:
                     chart_data_str = json.dumps(chart_data)
+                    self.get_chart(chart_gen_ts,
+                                   chart_options,
+                                   chart_name,
+                                   chart_data)
                     # Create the destination directory for the chart data file.
                     # Wrap in a try block in case it already exists.
                     try:
@@ -238,6 +249,22 @@ class HighchartsGenerator(weewx.reportengine.ReportGenerator):
                 # If skip_if_empty is set, it's OK if a type is unknown.
                 if not skip:
                     raise
+
+    def get_chart(self, chart_gen_ts, chart_options, chart_name, chart_data):
+        """Construct the chart data string."""
+
+        _data = dict()
+        _data['_version'] = '%s' % VERSION
+        _data['utcoffset'] = '%d' % self.utc_offset
+        _data['timespan'] = {'start': 'fred',
+                             'stop': chart_gen_ts}
+        _data[chart_name] = dict()
+        _data[chart_name]['series'] = chart_data
+        _data[chart_name]['units'] = 'C'
+        if self.min_range.get(chart_name) is not None:
+            _data[chart_name]['minRange'] = self.min_range.get(chart_name)
+
+        return _data
 
     def scale_time(self, ts, time_delta):
         """Calculate a suitable chart timespan given a chart time and time length.
